@@ -3,170 +3,115 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mundial Betting Pool</title>
+  <title>🏆 MUNDIAL BLASTER 2026 POOL</title>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <style>
+    /* Neon glow aesthetics custom-tailored for the Dashboard */
+    .neon-border-gold { box-shadow: 0 0 15px rgba(251, 191, 36, 0.2); border: 1px solid rgba(251, 191, 36, 0.4); }
+    .neon-border-cyan { box-shadow: 0 0 15px rgba(34, 211, 238, 0.15); border: 1px solid rgba(34, 211, 238, 0.3); }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+  </style>
 </head>
-<body class="bg-gray-900 text-white font-sans min-h-screen p-4 sm:p-8">
+<body class="bg-[#0b0f19] bg-gradient-to-br from-[#0b0f19] via-[#111827] to-[#070a12] text-white min-h-screen font-sans antialiased selection:bg-amber-500 selection:text-black">
 
-  <div class="max-w-3xl mx-auto">
-    <header class="text-center mb-8">
-      <h1 class="text-4xl font-extrabold text-amber-400 tracking-wide uppercase">🏆 Mundial Pool</h1>
-      <p class="text-gray-400 mt-2">Live Standings pulled straight from Google Sheets</p>
+  <div class="bg-gradient-to-r from-purple-900 via-indigo-900 to-blue-900 text-center py-2 px-4 text-xs font-semibold tracking-wider uppercase border-b border-indigo-500/30 flex items-center justify-center gap-2">
+    <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+    <span id="sync-status">Live Sync Active with Google Sheets</span>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <header class="text-center mb-10 animate__animated animate__fadeInDown">
+      <div class="inline-flex items-center gap-3 bg-amber-500/10 border border-amber-500/30 px-4 py-1.5 rounded-full text-amber-400 text-sm font-bold tracking-wide uppercase mb-3">
+        <i class="fa-solid fa-trophy animate-bounce"></i> Mundial Tournament Pool
+      </div>
+      <h1 class="text-4xl sm:text-6xl font-black tracking-tight bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-200 bg-clip-text text-transparent uppercase filter drop-shadow">
+        Mundial Blaster
+      </h1>
+      <p class="text-gray-400 mt-2 text-sm sm:text-base max-w-xl mx-auto font-medium">
+        Track every bet, follow live position shifts, and claim the ultimate bank pool. Updated instantly.
+      </p>
     </header>
 
-    <div class="bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-700">
-      <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
-        📊 Leaderboard
-      </h2>
+    <div id="error-banner" class="hidden max-w-3xl mx-auto mb-8 bg-red-950/50 border border-red-500/40 rounded-xl p-4 text-red-300 text-sm items-center gap-3 animate__animated animate__headShake">
+      <i class="fa-solid fa-triangle-exclamation text-xl text-red-400"></i>
+      <div id="error-message"></div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="border-b border-gray-700 text-gray-400 text-sm">
-              <th class="pb-3 w-12 text-center">Pos</th>
-              <th class="pb-3 pl-2">Player</th>
-              <th class="pb-3 text-center">Prediction (Champ / Boot)</th>
-              <th class="pb-3 text-right pr-2">Points</th>
-            </tr>
-          </thead>
-          <tbody id="leaderboard-body">
-            <tr>
-              <td colspan="4" class="text-center py-8 text-gray-400 animate-pulse">Loading sheet data...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <section class="lg:col-span-5 bg-[#121826]/90 rounded-2xl shadow-2xl p-5 sm:p-6 border border-gray-800/80 neon-border-gold animate__animated animate__fadeInLeft">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-xl font-black tracking-wide text-amber-400 uppercase flex items-center gap-2">
+            <i class="fa-solid fa-ranking-star"></i> Standings
+          </h2>
+          <span class="bg-gray-800 text-gray-400 text-xs font-bold px-2.5 py-1 rounded-md border border-gray-700/60 uppercase tracking-widest">
+            Top 3 Bank
+          </span>
+        </div>
+
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-gray-800 text-gray-500 text-xs uppercase font-bold tracking-wider">
+                <th class="pb-3 text-center w-12">Pos</th>
+                <th class="pb-3 pl-3">Player</th>
+                <th class="pb-3 text-center">Champ Pick</th>
+                <th class="pb-3 text-right pr-2">Score</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-rows" class="divide-y divide-gray-800/40">
+              <tr>
+                <td colspan="4" class="text-center py-16 text-gray-500 text-sm">
+                  <i class="fa-solid fa-spinner fa-spin text-2xl text-amber-400 mb-3 block"></i>
+                  Syncing live match configurations...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="lg:col-span-7 space-y-8 animate__animated animate__fadeInRight">
+        
+        <div class="bg-[#121826]/90 rounded-2xl shadow-2xl p-5 sm:p-6 border border-gray-800/80 neon-border-cyan">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+            <div>
+              <h2 class="text-xl font-black tracking-wide text-cyan-400 uppercase flex items-center gap-2">
+                <i class="fa-solid fa-id-card-clip"></i> Prediction Dashboards
+              </h2>
+              <p class="text-gray-400 text-xs mt-0.5">Click any player to reveal their structural tournament matrix.</p>
+            </div>
+            
+            <div id="player-tabs" class="flex flex-wrap gap-1.5 max-w-full overflow-x-auto pb-1 custom-scrollbar">
+              </div>
+          </div>
+
+          <div id="profile-showcase-container" class="bg-[#192233] border border-gray-700/40 rounded-xl p-5 min-h-[220px] transition-all duration-300">
+            <div class="text-center py-14 text-gray-500 text-sm">
+              <i class="fa-solid fa-arrow-pointer text-xl mb-2 text-cyan-500/40 block"></i>
+              Select a player from the menu above to see full stats.
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gray-900/60 border border-gray-800 rounded-xl p-4 flex flex-wrap gap-y-3 gap-x-6 justify-between items-center text-xs text-gray-400">
+          <div class="flex items-center gap-2"><i class="fa-solid fa-circle-info text-amber-400"></i> <span class="font-semibold text-gray-300">Scoring Engine:</span></div>
+          <div>🏆 Champion: <span class="text-amber-400 font-bold">50p</span></div>
+          <div>🥈 Runner Up: <span class="text-amber-400 font-bold">30p</span></div>
+          <div>👟 Golden Boot: <span class="text-amber-400 font-bold">25p</span></div>
+          <div>⚽ Semis: <span class="text-amber-400 font-bold">10p each</span></div>
+        </div>
+
+      </section>
+
     </div>
   </div>
 
-  <script>
-    // Your Google Sheet Configuration
-    const SHEET_ID = "1jwXb2Ksj-eRe4M0bVej_YWAHbWBR3p0jT5ojX3NOcjs";
-    const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
-
-    // Safe helper to extract cell string values from Google's JSON format
-    const getCellString = (cell) => {
-      if (!cell || cell.v === undefined || cell.v === null) return "";
-      return cell.v.toString().trim();
-    };
-
-    // Main Function to Fetch and Build Leaderboard
-    async function initLeaderboard() {
-      try {
-        const response = await fetch(GOOGLE_SHEET_URL);
-        const text = await response.text();
-        
-        // Clean up the Google visualization wrapper to isolate the pure JSON object
-        const jsonString = text.substring(text.indexOf("{"), text.lastIndexOf("}") + 1);
-        const data = JSON.parse(jsonString);
-        
-        const rows = data.table.rows;
-        let realResults = null;
-        let players = [];
-
-        // Parse each row from the spreadsheet
-        rows.forEach(row => {
-          if (!row.c || row.c.length === 0) return;
-
-          const name = getCellString(row.c[0]);
-          if (!name) return; // Skip empty rows
-
-          const playerData = {
-            name: name,
-            champion: getCellString(row.c[1]),
-            runnerUp: getCellString(row.c[2]),
-            goldenBoot: getCellString(row.c[3]),
-            semifinalists: [
-              getCellString(row.c[4]),
-              getCellString(row.c[5]),
-              getCellString(row.c[6]),
-              getCellString(row.c[7])
-            ].filter(team => team !== "") // Filter out blank slots
-          };
-
-          if (name.toUpperCase() === "REAL_RESULTS") {
-            realResults = playerData;
-          } else {
-            players.push(playerData);
-          }
-        });
-
-        if (!realResults) {
-          showError("Missing a row where Name is exactly 'REAL_RESULTS' to calculate scores.");
-          return;
-        }
-
-        // Calculate scores dynamically
-        const calculatedPlayers = players.map(player => {
-          let points = 0;
-
-          if (realResults.champion && player.champion.toLowerCase() === realResults.champion.toLowerCase()) points += 50;
-          if (realResults.runnerUp && player.runnerUp.toLowerCase() === realResults.runnerUp.toLowerCase()) points += 30;
-          if (realResults.goldenBoot && player.goldenBoot.toLowerCase() === realResults.goldenBoot.toLowerCase()) points += 25;
-
-          // Check Semifinalists (case-insensitive mapping)
-          const targetSemis = realResults.semifinalists.map(team => team.toLowerCase());
-          player.semifinalists.forEach(team => {
-            if (team && targetSemis.includes(team.toLowerCase())) {
-              points += 10;
-            }
-          });
-
-          return {
-            name: player.name,
-            summary: `${player.champion || '—'} / ${player.goldenBoot || '—'}`,
-            points: points
-          };
-        });
-
-        // Sort Highest to Lowest points
-        calculatedPlayers.sort((a, b) => b.points - a.points);
-
-        // Render the Leaderboard rows
-        renderTable(calculatedPlayers);
-
-      } catch (error) {
-        console.error(error);
-        showError("Failed to load Google Sheet. Double check that sharing is set to 'Anyone with the link can view'.");
-      }
-    }
-
-    function renderTable(sortedPlayers) {
-      const tbody = document.getElementById("leaderboard-body");
-      if (sortedPlayers.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-400">No players found below the REAL_RESULTS row.</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = "";
-      sortedPlayers.forEach((player, index) => {
-        const position = index + 1;
-        let posBadge = `<span class="text-gray-400">${position}</span>`;
-        if (position === 1) posBadge = "🥇";
-        if (position === 2) posBadge = "🥈";
-        if (position === 3) posBadge = "🥉";
-
-        const row = `
-          <tr class="border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors">
-            <td class="py-4 text-center text-lg">${posBadge}</td>
-            <td class="py-4 font-semibold pl-2">${player.name}</td>
-            <td class="py-4 text-center text-sm text-gray-400">${player.summary}</td>
-            <td class="py-4 text-right font-bold text-xl text-amber-400 pr-2">${player.points} pts</td>
-          </tr>
-        `;
-        tbody.innerHTML += row;
-      });
-    }
-
-    function showError(msg) {
-      document.getElementById("leaderboard-body").innerHTML = `
-        <tr>
-          <td colspan="4" class="text-center py-6 text-red-400 font-medium">${msg}</td>
-        </tr>`;
-    }
-
-    // Run when browser loads
-    initLeaderboard();
-  </script>
+  <script src="main.js"></script>
 </body>
 </html>
