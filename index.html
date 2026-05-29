@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mundial Betting Pool</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-900 text-white font-sans min-h-screen p-4 sm:p-8">
+
+  <div class="max-w-3xl mx-auto">
+    <header class="text-center mb-8">
+      <h1 class="text-4xl font-extrabold text-amber-400 tracking-wide uppercase">🏆 Mundial Pool</h1>
+      <p class="text-gray-400 mt-2">Live Standings pulled straight from Google Sheets</p>
+    </header>
+
+    <div class="bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-700">
+      <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
+        📊 Leaderboard
+      </h2>
+      
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-gray-700 text-gray-400 text-sm">
+              <th class="pb-3 w-12 text-center">Pos</th>
+              <th class="pb-3 pl-2">Player</th>
+              <th class="pb-3 text-center">Prediction (Champ / Boot)</th>
+              <th class="pb-3 text-right pr-2">Points</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-body">
+            <tr>
+              <td colspan="4" class="text-center py-8 text-gray-400 animate-pulse">Loading sheet data...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Your Google Sheet Configuration
+    const SHEET_ID = "1jwXb2Ksj-eRe4M0bVej_YWAHbWBR3p0jT5ojX3NOcjs";
+    const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+
+    // Safe helper to extract cell string values from Google's JSON format
+    const getCellString = (cell) => {
+      if (!cell || cell.v === undefined || cell.v === null) return "";
+      return cell.v.toString().trim();
+    };
+
+    // Main Function to Fetch and Build Leaderboard
+    async function initLeaderboard() {
+      try {
+        const response = await fetch(GOOGLE_SHEET_URL);
+        const text = await response.text();
+        
+        // Clean up the Google visualization wrapper to isolate the pure JSON object
+        const jsonString = text.substring(text.indexOf("{"), text.lastIndexOf("}") + 1);
+        const data = JSON.parse(jsonString);
+        
+        const rows = data.table.rows;
+        let realResults = null;
+        let players = [];
+
+        // Parse each row from the spreadsheet
+        rows.forEach(row => {
+          if (!row.c || row.c.length === 0) return;
+
+          const name = getCellString(row.c[0]);
+          if (!name) return; // Skip empty rows
+
+          const playerData = {
+            name: name,
+            champion: getCellString(row.c[1]),
+            runnerUp: getCellString(row.c[2]),
+            goldenBoot: getCellString(row.c[3]),
+            semifinalists: [
+              getCellString(row.c[4]),
+              getCellString(row.c[5]),
+              getCellString(row.c[6]),
+              getCellString(row.c[7])
+            ].filter(team => team !== "") // Filter out blank slots
+          };
+
+          if (name.toUpperCase() === "REAL_RESULTS") {
+            realResults = playerData;
+          } else {
+            players.push(playerData);
+          }
+        });
+
+        if (!realResults) {
+          showError("Missing a row where Name is exactly 'REAL_RESULTS' to calculate scores.");
+          return;
+        }
+
+        // Calculate scores dynamically
+        const calculatedPlayers = players.map(player => {
+          let points = 0;
+
+          if (realResults.champion && player.champion.toLowerCase() === realResults.champion.toLowerCase()) points += 50;
+          if (realResults.runnerUp && player.runnerUp.toLowerCase() === realResults.runnerUp.toLowerCase()) points += 30;
+          if (realResults.goldenBoot && player.goldenBoot.toLowerCase() === realResults.goldenBoot.toLowerCase()) points += 25;
+
+          // Check Semifinalists (case-insensitive mapping)
+          const targetSemis = realResults.semifinalists.map(team => team.toLowerCase());
+          player.semifinalists.forEach(team => {
+            if (team && targetSemis.includes(team.toLowerCase())) {
+              points += 10;
+            }
+          });
+
+          return {
+            name: player.name,
+            summary: `${player.champion || '—'} / ${player.goldenBoot || '—'}`,
+            points: points
+          };
+        });
+
+        // Sort Highest to Lowest points
+        calculatedPlayers.sort((a, b) => b.points - a.points);
+
+        // Render the Leaderboard rows
+        renderTable(calculatedPlayers);
+
+      } catch (error) {
+        console.error(error);
+        showError("Failed to load Google Sheet. Double check that sharing is set to 'Anyone with the link can view'.");
+      }
+    }
+
+    function renderTable(sortedPlayers) {
+      const tbody = document.getElementById("leaderboard-body");
+      if (sortedPlayers.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-400">No players found below the REAL_RESULTS row.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = "";
+      sortedPlayers.forEach((player, index) => {
+        const position = index + 1;
+        let posBadge = `<span class="text-gray-400">${position}</span>`;
+        if (position === 1) posBadge = "🥇";
+        if (position === 2) posBadge = "🥈";
+        if (position === 3) posBadge = "🥉";
+
+        const row = `
+          <tr class="border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors">
+            <td class="py-4 text-center text-lg">${posBadge}</td>
+            <td class="py-4 font-semibold pl-2">${player.name}</td>
+            <td class="py-4 text-center text-sm text-gray-400">${player.summary}</td>
+            <td class="py-4 text-right font-bold text-xl text-amber-400 pr-2">${player.points} pts</td>
+          </tr>
+        `;
+        tbody.innerHTML += row;
+      });
+    }
+
+    function showError(msg) {
+      document.getElementById("leaderboard-body").innerHTML = `
+        <tr>
+          <td colspan="4" class="text-center py-6 text-red-400 font-medium">${msg}</td>
+        </tr>`;
+    }
+
+    // Run when browser loads
+    initLeaderboard();
+  </script>
+</body>
+</html>
