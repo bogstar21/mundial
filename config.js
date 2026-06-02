@@ -6,4 +6,4 @@
       Tiene esta pinta:
       https://script.google.com/macros/s/AKfycb…/exec
    ───────────────────────────────────────────────────────────── */
-var GOOGLE_SCRIPT_URL = 'PEGA_AQUI_LA_URL_DE_TU_APLICACION_WEB';
+var GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVeK2al_5bdILbpGDsREkztE1CCPA62LPC6TterrltQIM1MUf1YxhiH_aNSiQ4yANYsw/exec';
