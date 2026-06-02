@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mundial Blaster 2026 | Quiniela y Clasificación</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .glass-panel {
+      background: rgba(18, 24, 38, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(75, 85, 99, 0.4);
+    }
+    .input-field {
+      width: 100%;
+      background: rgba(11, 15, 25, 0.8);
+      border: 1px solid rgba(75, 85, 99, 0.5);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      outline: none;
+      transition: all 0.2s ease-in-out;
+    }
+    .input-field:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+    }
+    .tab-btn {
+      color: #9ca3af;
+      background: rgba(17, 24, 39, 0.6);
+      border: 1px solid rgba(75, 85, 99, 0.35);
+    }
+    .tab-btn:hover { color: #e5e7eb; }
+    .tab-btn.tab-active {
+      color: #fff;
+      background: linear-gradient(90deg, #0891b2, #2563eb);
+      border-color: transparent;
+      box-shadow: 0 8px 24px -8px rgba(8, 145, 178, 0.55);
+    }
+    .skeleton {
+      background: linear-gradient(100deg, rgba(31,41,55,.5) 40%, rgba(55,65,81,.65) 50%, rgba(31,41,55,.5) 60%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite linear;
+    }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+    .fade-in { animation: fadeIn .35s ease both; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body class="bg-[#0b0f19] bg-gradient-to-br from-[#0b0f19] via-[#111827] to-[#070a12] text-gray-200 min-h-screen font-sans antialiased py-10 px-4 sm:px-6">
+
+  <div class="max-w-3xl mx-auto">
+
+    <header class="text-center mb-8">
+      <div class="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-4 py-1.5 rounded-full text-amber-400 text-sm font-bold tracking-wide uppercase mb-4">
+        <i class="fa-solid fa-futbol"></i> Quiniela Mundial 2026
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white uppercase mb-2">Mundial Blaster</h1>
+      <p class="text-gray-400 text-sm sm:text-base">Haz tus predicciones y sigue la clasificación en directo.</p>
+    </header>
+
+    <nav class="grid grid-cols-2 gap-3 mb-6" role="tablist">
+      <button class="tab-btn tab-active py-3 rounded-xl font-black uppercase tracking-wide text-sm transition-all" data-tab="picks" role="tab" aria-selected="true">
+        <i class="fa-solid fa-pen-to-square mr-1"></i> Predicciones
+      </button>
+      <button class="tab-btn py-3 rounded-xl font-black uppercase tracking-wide text-sm transition-all" data-tab="board" role="tab" aria-selected="false">
+        <i class="fa-solid fa-ranking-star mr-1"></i> Clasificación
+      </button>
+    </nav>
+
+    <!-- ════════════ PESTAÑA 1 · FORMULARIO ════════════ -->
+    <section id="panel-picks" role="tabpanel">
+      <div class="text-center">
+        <span id="deadline-chip" class="hidden"></span>
+      </div>
+
+      <form id="prediction-form" class="glass-panel rounded-2xl p-6 sm:p-8 shadow-2xl space-y-8">
+
+        <div>
+          <label class="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Nombre del jugador</label>
+          <input type="text" name="playerName" required maxlength="40" placeholder="Tu nombre visible" class="input-field text-lg font-bold" autocomplete="nickname">
+          <p class="text-[11px] text-gray-500 mt-2 font-medium">Si envías otra vez con el mismo nombre, tus predicciones se actualizan (hasta el cierre).</p>
+        </div>
+
+        <hr class="border-gray-800">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-xs font-black text-amber-400 uppercase tracking-wider mb-2">
+              <i class="fa-solid fa-trophy mr-1"></i> Campeón (50p)
+            </label>
+            <input type="text" name="champion" required maxlength="60" list="team-list" placeholder="País ganador" class="input-field">
+          </div>
+          <div>
+            <label class="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2">
+              <i class="fa-solid fa-medal mr-1"></i> Subcampeón (30p)
+            </label>
+            <input type="text" name="runnerUp" required maxlength="60" list="team-list" placeholder="Segundo puesto" class="input-field">
+          </div>
+          <div>
+            <label class="block text-xs font-black text-orange-400 uppercase tracking-wider mb-2">
+              <i class="fa-solid fa-futbol mr-1"></i> Máximo Goleador (25p)
+            </label>
+            <input type="text" name="goldenBoot" required maxlength="60" placeholder="Jugador con más goles (ej. Mbappé)" class="input-field">
+          </div>
+          <div>
+            <label class="block text-xs font-black text-purple-400 uppercase tracking-wider mb-2">
+              <i class="fa-solid fa-gem mr-1"></i> Equipo Revelación (20p)
+            </label>
+            <input type="text" name="revelation" required maxlength="60" list="team-list" placeholder="La sorpresa del torneo" class="input-field">
+          </div>
+        </div>
+
+        <hr class="border-gray-800">
+
+        <div>
+          <label class="block text-xs font-black text-cyan-400 uppercase tracking-wider mb-4">
+            <i class="fa-solid fa-diagram-project mr-1"></i> Los 4 Semifinalistas (10p cada uno)
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <input type="text" name="semi1" required maxlength="60" list="team-list" placeholder="Semifinalista 1" class="input-field">
+            <input type="text" name="semi2" required maxlength="60" list="team-list" placeholder="Semifinalista 2" class="input-field">
+            <input type="text" name="semi3" required maxlength="60" list="team-list" placeholder="Semifinalista 3" class="input-field">
+            <input type="text" name="semi4" required maxlength="60" list="team-list" placeholder="Semifinalista 4" class="input-field">
+          </div>
+          <p class="text-[11px] text-gray-500 mt-3 font-medium">
+            * Incluye a tu campeón y a tu subcampeón entre los cuatro.
+          </p>
+        </div>
+
+        <button type="submit" id="submit-btn" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black text-lg py-4 rounded-xl shadow-lg shadow-cyan-500/20 transition-all transform hover:scale-[1.02] active:scale-95 uppercase tracking-wide flex justify-center items-center gap-2">
+          <span>Enviar predicciones</span>
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+
+        <div id="status-message" class="hidden"></div>
+      </form>
+    </section>
+
+    <!-- ════════════ PESTAÑA 2 · CLASIFICACIÓN ════════════ -->
+    <section id="panel-board" role="tabpanel" class="hidden">
+      <div class="glass-panel rounded-2xl p-5 sm:p-7 shadow-2xl">
+        <div class="flex items-center justify-between gap-3 mb-5">
+          <h2 class="text-lg font-black text-white uppercase tracking-wide">
+            <i class="fa-solid fa-ranking-star text-amber-400 mr-1"></i> Clasificación
+          </h2>
+          <div class="flex items-center gap-3">
+            <span id="last-updated" class="text-[11px] text-gray-500 font-medium"></span>
+            <button id="refresh-btn" title="Actualizar" class="w-9 h-9 rounded-lg bg-gray-800/80 hover:bg-gray-700 border border-gray-700/60 text-gray-300 transition">
+              <i class="fa-solid fa-rotate"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="results-chips" class="flex flex-wrap gap-2 mb-6"></div>
+        <div id="board-status"></div>
+        <div id="podium"></div>
+        <div id="board-rows"></div>
+      </div>
+      <p class="text-center text-[11px] text-gray-600 mt-4 font-medium">
+        <i class="fa-solid fa-rotate mr-1"></i>Se actualiza cada 60 s · Toca una fila para ver todas las predicciones
+      </p>
+    </section>
+
+    <footer class="text-center text-[11px] text-gray-600 mt-10 font-medium">
+      Mundial Blaster 2026 · Datos guardados en Google Sheets
+    </footer>
+  </div>
+
+  <!-- Sugerencias de equipos (se puede escribir libre — edita la lista si quieres) -->
+  <datalist id="team-list">
+    <option value="Alemania"></option>
+    <option value="Arabia Saudí"></option>
+    <option value="Argelia"></option>
+    <option value="Argentina"></option>
+    <option value="Australia"></option>
+    <option value="Austria"></option>
+    <option value="Bélgica"></option>
+    <option value="Bolivia"></option>
+    <option value="Brasil"></option>
+    <option value="Cabo Verde"></option>
+    <option value="Canadá"></option>
+    <option value="Catar"></option>
+    <option value="Chequia"></option>
+    <option value="Colombia"></option>
+    <option value="Corea del Sur"></option>
+    <option value="Costa de Marfil"></option>
+    <option value="Croacia"></option>
+    <option value="Curazao"></option>
+    <option value="Dinamarca"></option>
+    <option value="Ecuador"></option>
+    <option value="Egipto"></option>
+    <option value="Escocia"></option>
+    <option value="Eslovaquia"></option>
+    <option value="España"></option>
+    <option value="Estados Unidos"></option>
+    <option value="Francia"></option>
+    <option value="Gales"></option>
+    <option value="Ghana"></option>
+    <option value="Haití"></option>
+    <option value="Inglaterra"></option>
+    <option value="Irak"></option>
+    <option value="Irán"></option>
+    <option value="Irlanda"></option>
+    <option value="Italia"></option>
+    <option value="Jamaica"></option>
+    <option value="Japón"></option>
+    <option value="Jordania"></option>
+    <option value="Marruecos"></option>
+    <option value="México"></option>
+    <option value="Noruega"></option>
+    <option value="Nueva Caledonia"></option>
+    <option value="Nueva Zelanda"></option>
+    <option value="Países Bajos"></option>
+    <option value="Panamá"></option>
+    <option value="Paraguay"></option>
+    <option value="Polonia"></option>
+    <option value="Portugal"></option>
+    <option value="RD Congo"></option>
+    <option value="Rumanía"></option>
+    <option value="Senegal"></option>
+    <option value="Sudáfrica"></option>
+    <option value="Suecia"></option>
+    <option value="Suiza"></option>
+    <option value="Túnez"></option>
+    <option value="Turquía"></option>
+    <option value="Ucrania"></option>
+    <option value="Uruguay"></option>
+    <option value="Uzbekistán"></option>
+  </datalist>
+
+  <script src="config.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
