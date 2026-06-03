@@ -216,31 +216,55 @@ function onEdit(e) {
 
 // ─────────────────────────── CÁLCULO DE PUNTOS ───────────────────────────
 
-/** Calcula la clasificación completa a partir de Predicciones + Resultados. */
+/** Calcula la clasificación completa a partir de Predicciones + Resultados.
+ *  Lee la cabecera para detectar si las filas son del formato antiguo (sin MVP)
+ *  o del nuevo (con MVP), y así no mezclar columnas. */
 function computeBoard_(ss) {
   const cfg = getResultsAndScoring_(ss);
   const sh = ss.getSheetByName(SHEETS.PREDICTIONS);
   const players = [];
 
   if (sh && sh.getLastRow() > 1) {
-    const values = sh.getRange(2, 1, sh.getLastRow() - 1, 11).getValues();
-    values.forEach(function (row) {
-      const ts = row[0];
-      const name = String(row[1] || '').trim();
-      if (!name) return;
-      const champion = String(row[2] || '').trim();
-      const runnerUp = String(row[3] || '').trim();
-      const goldenBoot = String(row[4] || '').trim();
-      const revelation = String(row[5] || '').trim();
-      const mvp = String(row[6] || '').trim();
-      const semis = [row[7], row[8], row[9], row[10]].map(function (v) { return String(v || '').trim(); });
+    // ── Detectar posición de columnas leyendo la cabecera ──
+    const nCols = sh.getLastColumn();
+    const headerRow = sh.getRange(1, 1, 1, nCols).getValues()[0];
+    const idx = {};
+    headerRow.forEach(function (h, i) { idx[String(h).trim()] = i; });
 
-      const bChampion = judge_(champion, cfg.results.champion, cfg.scoring.champion);
-      const bRunnerUp = judge_(runnerUp, cfg.results.runnerUp, cfg.scoring.runnerUp);
-      const bBoot = judge_(goldenBoot, cfg.results.goldenBoot, cfg.scoring.goldenBoot);
-      const bRevelation = judge_(revelation, cfg.results.revelation, cfg.scoring.revelation);
-      const bMvp = judge_(mvp, cfg.results.mvp, cfg.scoring.mvp);
-      const bSemis = judgeSemis_(semis, cfg.results.semis, cfg.scoring.semi);
+    // Columnas fijas (siempre presentes)
+    const iJugador    = idx['Jugador']           !== undefined ? idx['Jugador']           : 1;
+    const iCampeon    = idx['Campeón']            !== undefined ? idx['Campeón']            : 2;
+    const iSubcampeon = idx['Subcampeón']         !== undefined ? idx['Subcampeón']         : 3;
+    const iGoleador   = idx['Máximo Goleador']    !== undefined ? idx['Máximo Goleador']    : 4;
+    const iRevelacion = idx['Equipo Revelación']  !== undefined ? idx['Equipo Revelación']  : 5;
+    // MVP puede no estar en filas antiguas
+    const iMvp        = idx['MVP']               !== undefined ? idx['MVP']               : -1;
+    // Semis: si hay MVP, están a partir de col 7; si no, de col 6
+    const iSemi1 = idx['Semi 1'] !== undefined ? idx['Semi 1'] : (iMvp >= 0 ? 7 : 6);
+    const iSemi2 = idx['Semi 2'] !== undefined ? idx['Semi 2'] : iSemi1 + 1;
+    const iSemi3 = idx['Semi 3'] !== undefined ? idx['Semi 3'] : iSemi1 + 2;
+    const iSemi4 = idx['Semi 4'] !== undefined ? idx['Semi 4'] : iSemi1 + 3;
+
+    const values = sh.getRange(2, 1, sh.getLastRow() - 1, nCols).getValues();
+    values.forEach(function (row) {
+      const ts   = row[0];
+      const name = String(row[iJugador] || '').trim();
+      if (!name) return;
+      const champion   = String(row[iCampeon]    || '').trim();
+      const runnerUp   = String(row[iSubcampeon] || '').trim();
+      const goldenBoot = String(row[iGoleador]   || '').trim();
+      const revelation = String(row[iRevelacion] || '').trim();
+      const mvp        = iMvp >= 0 ? String(row[iMvp] || '').trim() : '';
+      const semis = [iSemi1, iSemi2, iSemi3, iSemi4].map(function (ci) {
+        return ci < row.length ? String(row[ci] || '').trim() : '';
+      });
+
+      const bChampion  = judge_(champion,   cfg.results.champion,   cfg.scoring.champion);
+      const bRunnerUp  = judge_(runnerUp,   cfg.results.runnerUp,   cfg.scoring.runnerUp);
+      const bBoot      = judge_(goldenBoot, cfg.results.goldenBoot, cfg.scoring.goldenBoot);
+      const bRevelation= judge_(revelation, cfg.results.revelation, cfg.scoring.revelation);
+      const bMvp       = judge_(mvp,        cfg.results.mvp,        cfg.scoring.mvp || 20);
+      const bSemis     = judgeSemis_(semis, cfg.results.semis,      cfg.scoring.semi);
 
       players.push({
         player: name,

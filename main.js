@@ -39,6 +39,9 @@
       d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
   };
 
+  // Devuelve el breakdown de un campo de forma segura (filas antiguas sin mvp)
+  const safeBd = (b, field) => (b && b[field]) ? b[field] : { hit: null, points: 0 };
+
   const hitIcon = h =>
     h === true  ? '<i class="fa-solid fa-check c-green" style="font-size:0.8rem;"></i>' :
     h === false ? '<i class="fa-solid fa-xmark c-red"   style="font-size:0.8rem;"></i>' :
@@ -229,7 +232,7 @@
       chip('🥈', 'Subcampeón', results.runnerUp, scoring.runnerUp + 'p') +
       chip('⚽', 'Goleador', results.goldenBoot, scoring.goldenBoot + 'p') +
       chip('💎', 'Revelación', results.revelation, scoring.revelation + 'p') +
-      chip('⭐', 'MVP', results.mvp, scoring.mvp + 'p') +
+      chip('⭐', 'MVP', results.mvp, (scoring.mvp || 20) + 'p') +
       chip('🔥', 'Final 4', semis.join(', '), scoring.semi + 'p c/u');
   }
 
@@ -262,7 +265,7 @@
         <span>🥈${hitIcon(b.runnerUp.hit)}</span>
         <span>⚽${hitIcon(b.goldenBoot.hit)}</span>
         <span>💎${hitIcon(b.revelation.hit)}</span>
-        <span>⭐${hitIcon(b.mvp.hit)}</span>
+        <span>⭐${hitIcon(safeBd(b,'mvp').hit)}</span>
         <span class="c-muted" style="font-weight:700;">${b.semis.hits}/4</span>
       </span>`;
     return `
@@ -313,7 +316,7 @@
         ${pickCardHtml('Subcampeón', '🥈', p.picks.runnerUp, b.runnerUp, sc.runnerUp)}
         ${pickCardHtml('Goleador', '⚽', p.picks.goldenBoot, b.goldenBoot, sc.goldenBoot)}
         ${pickCardHtml('Revelación', '💎', p.picks.revelation, b.revelation, sc.revelation)}
-        ${pickCardHtml('MVP', '⭐', p.picks.mvp, b.mvp, sc.mvp)}
+        ${pickCardHtml('MVP', '⭐', p.picks.mvp || '', safeBd(b,'mvp'), sc.mvp || 20)}
       </div>
       <div style="font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:0.5rem;">
         🔥 Semifinalistas — ${b.semis.hits} aciertos · +${b.semis.points} pts
