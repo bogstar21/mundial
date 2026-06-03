@@ -44,10 +44,10 @@ const SHEETS = {
 
 const PRED_HEADERS = [
   'Fecha', 'Jugador', 'Campeón', 'Subcampeón', 'Máximo Goleador',
-  'Equipo Revelación', 'Semi 1', 'Semi 2', 'Semi 3', 'Semi 4', 'Puntos',
+  'Equipo Revelación', 'MVP', 'Semi 1', 'Semi 2', 'Semi 3', 'Semi 4', 'Puntos',
 ];
 
-const DEFAULT_SCORING = { champion: 50, runnerUp: 30, goldenBoot: 25, revelation: 20, semi: 10 };
+const DEFAULT_SCORING = { champion: 50, runnerUp: 30, goldenBoot: 25, revelation: 20, mvp: 20, semi: 10 };
 
 // ─────────────────────────── ESTRUCTURA ───────────────────────────
 
@@ -63,7 +63,7 @@ function setupSheets() {
   pred.setColumnWidth(1, 170);
   pred.setColumnWidth(2, 160);
   pred.setColumnWidths(3, 8, 135);
-  pred.setColumnWidth(11, 80);
+  pred.setColumnWidth(12, 80);
   pred.getRange('A2:A').setNumberFormat('yyyy-mm-dd hh:mm:ss');
 
   // ── Pestaña Resultados: rellena las celdas amarillas según haya resultados ──
@@ -75,6 +75,7 @@ function setupSheets() {
       ['runnerUp', '', 'Subcampeón (perdedor de la final)'],
       ['goldenBoot', '', 'Máximo goleador del torneo (nombre del jugador)'],
       ['revelation', '', 'Equipo revelación del torneo'],
+      ['mvp', '', 'MVP del torneo — mejor jugador (nombre del jugador)'],
       ['semi1', '', 'Semifinalista (en cualquier orden)'],
       ['semi2', '', 'Semifinalista (en cualquier orden)'],
       ['semi3', '', 'Semifinalista (en cualquier orden)'],
@@ -83,6 +84,7 @@ function setupSheets() {
       ['pointsRunnerUp', DEFAULT_SCORING.runnerUp, 'Puntos por acertar el subcampeón'],
       ['pointsGoldenBoot', DEFAULT_SCORING.goldenBoot, 'Puntos por acertar el goleador'],
       ['pointsRevelation', DEFAULT_SCORING.revelation, 'Puntos por acertar la revelación'],
+      ['pointsMvp', DEFAULT_SCORING.mvp, 'Puntos por acertar el MVP del torneo'],
       ['pointsSemi', DEFAULT_SCORING.semi, 'Puntos por cada semifinalista acertado'],
     ];
     res.getRange(1, 1, rows.length, 3).setValues(rows);
@@ -92,8 +94,8 @@ function setupSheets() {
   res.setColumnWidth(1, 170);
   res.setColumnWidth(2, 200);
   res.setColumnWidth(3, 340);
-  res.getRange(2, 1, 13, 1).setFontWeight('bold');
-  res.getRange(2, 2, 8, 1).setBackground('#fef3c7'); // celdas donde se escriben los resultados
+  res.getRange(2, 1, 14, 1).setFontWeight('bold');
+  res.getRange(2, 2, 9, 1).setBackground('#fef3c7'); // celdas donde se escriben los resultados
 
   // ── Pestaña Clasificación: se genera sola (la web la sirve en vivo vía doGet) ──
   ensureSheet_(ss, SHEETS.LEADERBOARD);
@@ -106,14 +108,14 @@ function seedDemoData() {
   ensureStructure_(ss);
   const sh = ss.getSheetByName(SHEETS.PREDICTIONS);
   const demo = [
-    ['Leo', 'Argentina', 'Francia', 'Messi', 'Marruecos', 'Argentina', 'Francia', 'España', 'Inglaterra'],
-    ['Cris', 'Portugal', 'Brasil', 'Ronaldo', 'Japón', 'Portugal', 'Brasil', 'Alemania', 'Argentina'],
-    ['Luka', 'Croacia', 'Argentina', 'Mbappé', 'Croacia', 'Croacia', 'Argentina', 'Brasil', 'Países Bajos'],
-    ['Kylian', 'Francia', 'Inglaterra', 'Mbappé', 'Uzbekistán', 'Francia', 'Inglaterra', 'España', 'Portugal'],
+    ['Leo', 'Argentina', 'Francia', 'Messi', 'Marruecos', 'Messi', 'Argentina', 'Francia', 'España', 'Inglaterra'],
+    ['Cris', 'Portugal', 'Brasil', 'Ronaldo', 'Japón', 'Vinicius', 'Portugal', 'Brasil', 'Alemania', 'Argentina'],
+    ['Luka', 'Croacia', 'Argentina', 'Mbappé', 'Croacia', 'Mbappé', 'Croacia', 'Argentina', 'Brasil', 'Países Bajos'],
+    ['Kylian', 'Francia', 'Inglaterra', 'Mbappé', 'Uzbekistán', 'Pedri', 'Francia', 'Inglaterra', 'España', 'Portugal'],
   ];
   demo.forEach(function (d, i) {
     sh.appendRow([new Date(Date.now() - (demo.length - i) * 3600000),
-      d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7], d[8], '']);
+      d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7], d[8], d[9], '']);
   });
   refreshLeaderboard();
 }
@@ -163,7 +165,7 @@ function doPost(e) {
       data = e.parameter;
     }
 
-    const fields = ['playerName', 'champion', 'runnerUp', 'goldenBoot', 'revelation', 'semi1', 'semi2', 'semi3', 'semi4'];
+    const fields = ['playerName', 'champion', 'runnerUp', 'goldenBoot', 'revelation', 'mvp', 'semi1', 'semi2', 'semi3', 'semi4'];
     const clean = {};
     for (let i = 0; i < fields.length; i++) {
       clean[fields[i]] = sanitize_(data[fields[i]]);
@@ -177,7 +179,7 @@ function doPost(e) {
     const sh = ss.getSheetByName(SHEETS.PREDICTIONS);
     const rowValues = [
       new Date(), clean.playerName, clean.champion, clean.runnerUp, clean.goldenBoot,
-      clean.revelation, clean.semi1, clean.semi2, clean.semi3, clean.semi4, '',
+      clean.revelation, clean.mvp, clean.semi1, clean.semi2, clean.semi3, clean.semi4, '',
     ];
 
     // Upsert por nombre de jugador (ignora mayúsculas y acentos)
@@ -221,7 +223,7 @@ function computeBoard_(ss) {
   const players = [];
 
   if (sh && sh.getLastRow() > 1) {
-    const values = sh.getRange(2, 1, sh.getLastRow() - 1, 10).getValues();
+    const values = sh.getRange(2, 1, sh.getLastRow() - 1, 11).getValues();
     values.forEach(function (row) {
       const ts = row[0];
       const name = String(row[1] || '').trim();
@@ -230,20 +232,22 @@ function computeBoard_(ss) {
       const runnerUp = String(row[3] || '').trim();
       const goldenBoot = String(row[4] || '').trim();
       const revelation = String(row[5] || '').trim();
-      const semis = [row[6], row[7], row[8], row[9]].map(function (v) { return String(v || '').trim(); });
+      const mvp = String(row[6] || '').trim();
+      const semis = [row[7], row[8], row[9], row[10]].map(function (v) { return String(v || '').trim(); });
 
       const bChampion = judge_(champion, cfg.results.champion, cfg.scoring.champion);
       const bRunnerUp = judge_(runnerUp, cfg.results.runnerUp, cfg.scoring.runnerUp);
       const bBoot = judge_(goldenBoot, cfg.results.goldenBoot, cfg.scoring.goldenBoot);
       const bRevelation = judge_(revelation, cfg.results.revelation, cfg.scoring.revelation);
+      const bMvp = judge_(mvp, cfg.results.mvp, cfg.scoring.mvp);
       const bSemis = judgeSemis_(semis, cfg.results.semis, cfg.scoring.semi);
 
       players.push({
         player: name,
         submittedAt: ts instanceof Date ? ts.toISOString() : String(ts),
-        picks: { champion: champion, runnerUp: runnerUp, goldenBoot: goldenBoot, revelation: revelation, semis: semis },
-        breakdown: { champion: bChampion, runnerUp: bRunnerUp, goldenBoot: bBoot, revelation: bRevelation, semis: bSemis },
-        points: bChampion.points + bRunnerUp.points + bBoot.points + bRevelation.points + bSemis.points,
+        picks: { champion: champion, runnerUp: runnerUp, goldenBoot: goldenBoot, revelation: revelation, mvp: mvp, semis: semis },
+        breakdown: { champion: bChampion, runnerUp: bRunnerUp, goldenBoot: bBoot, revelation: bRevelation, mvp: bMvp, semis: bSemis },
+        points: bChampion.points + bRunnerUp.points + bBoot.points + bRevelation.points + bMvp.points + bSemis.points,
       });
     });
   }
@@ -309,6 +313,7 @@ function getResultsAndScoring_(ss) {
       runnerUp: str('runnerUp'),
       goldenBoot: str('goldenBoot'),
       revelation: str('revelation'),
+      mvp: str('mvp'),
       semis: [str('semi1'), str('semi2'), str('semi3'), str('semi4')],
     },
     scoring: {
@@ -316,6 +321,7 @@ function getResultsAndScoring_(ss) {
       runnerUp: num('pointsRunnerUp', DEFAULT_SCORING.runnerUp),
       goldenBoot: num('pointsGoldenBoot', DEFAULT_SCORING.goldenBoot),
       revelation: num('pointsRevelation', DEFAULT_SCORING.revelation),
+      mvp: num('pointsMvp', DEFAULT_SCORING.mvp),
       semi: num('pointsSemi', DEFAULT_SCORING.semi),
     },
   };
@@ -331,7 +337,7 @@ function refreshLeaderboard() {
   const sh = ensureSheet_(ss, SHEETS.LEADERBOARD);
 
   sh.clearContents();
-  const headers = ['Puesto', 'Jugador', 'Puntos', 'Campeón', 'Subcampeón', 'Goleador', 'Revelación', 'Semis', 'Enviado'];
+  const headers = ['Puesto', 'Jugador', 'Puntos', 'Campeón', 'Subcampeón', 'Goleador', 'Revelación', 'MVP', 'Semis', 'Enviado'];
   sh.getRange(1, 1, 1, headers.length).setValues([headers]);
   styleHeader_(sh, headers.length, '#064e3b');
   sh.setFrozenRows(1);
@@ -344,16 +350,17 @@ function refreshLeaderboard() {
         markPick_(p.picks.runnerUp, p.breakdown.runnerUp.hit),
         markPick_(p.picks.goldenBoot, p.breakdown.goldenBoot.hit),
         markPick_(p.picks.revelation, p.breakdown.revelation.hit),
+        markPick_(p.picks.mvp, p.breakdown.mvp.hit),
         p.breakdown.semis.hits + '/4',
         new Date(p.submittedAt),
       ];
     });
     sh.getRange(2, 1, rows.length, headers.length).setValues(rows);
-    sh.getRange(2, 9, rows.length, 1).setNumberFormat('yyyy-mm-dd hh:mm');
+    sh.getRange(2, 10, rows.length, 1).setNumberFormat('yyyy-mm-dd hh:mm');
   }
   sh.setColumnWidth(2, 160);
-  sh.setColumnWidths(4, 4, 150);
-  sh.setColumnWidth(9, 150);
+  sh.setColumnWidths(4, 5, 150);
+  sh.setColumnWidth(10, 150);
 
   // Copia los puntos a la pestaña Predicciones
   const pred = ss.getSheetByName(SHEETS.PREDICTIONS);
@@ -365,7 +372,7 @@ function refreshLeaderboard() {
       const v = ptsByName[norm_(n[0])];
       return [v === undefined ? '' : v];
     });
-    pred.getRange(2, 11, pts.length, 1).setValues(pts);
+    pred.getRange(2, 12, pts.length, 1).setValues(pts);
   }
 }
 

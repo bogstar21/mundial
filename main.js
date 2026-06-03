@@ -12,7 +12,7 @@
   const state = {
     tab: 'picks',
     players: [],
-    scoring: { champion: 50, runnerUp: 30, goldenBoot: 25, revelation: 20, semi: 10 },
+    scoring: { champion: 50, runnerUp: 30, goldenBoot: 25, revelation: 20, mvp: 20, semi: 10 },
     expanded: new Set(),
     deadline: null,
     locked: false,
@@ -229,6 +229,7 @@
       chip('🥈', 'Subcampeón', results.runnerUp, scoring.runnerUp + 'p') +
       chip('⚽', 'Goleador', results.goldenBoot, scoring.goldenBoot + 'p') +
       chip('💎', 'Revelación', results.revelation, scoring.revelation + 'p') +
+      chip('⭐', 'MVP', results.mvp, scoring.mvp + 'p') +
       chip('🔥', 'Final 4', semis.join(', '), scoring.semi + 'p c/u');
   }
 
@@ -261,6 +262,7 @@
         <span>🥈${hitIcon(b.runnerUp.hit)}</span>
         <span>⚽${hitIcon(b.goldenBoot.hit)}</span>
         <span>💎${hitIcon(b.revelation.hit)}</span>
+        <span>⭐${hitIcon(b.mvp.hit)}</span>
         <span class="c-muted" style="font-weight:700;">${b.semis.hits}/4</span>
       </span>`;
     return `
@@ -311,6 +313,7 @@
         ${pickCardHtml('Subcampeón', '🥈', p.picks.runnerUp, b.runnerUp, sc.runnerUp)}
         ${pickCardHtml('Goleador', '⚽', p.picks.goldenBoot, b.goldenBoot, sc.goldenBoot)}
         ${pickCardHtml('Revelación', '💎', p.picks.revelation, b.revelation, sc.revelation)}
+        ${pickCardHtml('MVP', '⭐', p.picks.mvp, b.mvp, sc.mvp)}
       </div>
       <div style="font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:0.5rem;">
         🔥 Semifinalistas — ${b.semis.hits} aciertos · +${b.semis.points} pts
