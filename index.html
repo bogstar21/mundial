@@ -3,175 +3,350 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mundial Blaster 2026 | Quiniela y Clasificación</title>
+  <title>EpixMundial 2026 | Quiniela</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    .glass-panel {
-      background: rgba(18, 24, 38, 0.85);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(75, 85, 99, 0.4);
+    :root {
+      --navy:   #0f1e2e;
+      --navy2:  #162436;
+      --navy3:  #1c2f42;
+      --navy4:  #243549;
+      --cyan:   #00c2d4;
+      --pink:   #e8215a;
+      --text:   #e2eaf2;
+      --muted:  #7a9ab5;
+      --border: #253a4e;
     }
+    * { box-sizing: border-box; }
+    body { background: var(--navy); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; }
+
+    /* ── layout ── */
+    .card {
+      background: var(--navy2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .card-inner {
+      background: var(--navy3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    /* ── tabs ── */
+    .tab-btn {
+      background: var(--navy3);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.7rem 1rem;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      cursor: pointer;
+    }
+    .tab-btn:hover { color: var(--text); border-color: #3a5068; }
+    .tab-btn.tab-active {
+      background: var(--cyan);
+      border-color: var(--cyan);
+      color: var(--navy);
+    }
+
+    /* ── form inputs ── */
     .input-field {
       width: 100%;
-      background: rgba(11, 15, 25, 0.8);
-      border: 1px solid rgba(75, 85, 99, 0.5);
-      color: white;
-      padding: 0.75rem 1rem;
-      border-radius: 0.5rem;
+      background: var(--navy);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.7rem 0.9rem;
+      border-radius: 8px;
       outline: none;
-      transition: all 0.2s ease-in-out;
+      font-size: 0.9rem;
+      transition: border-color 0.15s;
     }
-    .input-field:focus {
-      border-color: #38bdf8;
-      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+    .input-field:focus { border-color: var(--cyan); }
+    .input-field::placeholder { color: var(--muted); }
+
+    /* ── labels ── */
+    .field-label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.45rem;
     }
-    .tab-btn {
-      color: #9ca3af;
-      background: rgba(17, 24, 39, 0.6);
-      border: 1px solid rgba(75, 85, 99, 0.35);
+
+    /* ── primary button ── */
+    .btn-primary {
+      width: 100%;
+      background: var(--cyan);
+      color: var(--navy);
+      font-weight: 800;
+      font-size: 0.95rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.9rem 1rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
     }
-    .tab-btn:hover { color: #e5e7eb; }
-    .tab-btn.tab-active {
-      color: #fff;
-      background: linear-gradient(90deg, #0891b2, #2563eb);
-      border-color: transparent;
-      box-shadow: 0 8px 24px -8px rgba(8, 145, 178, 0.55);
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ── divider ── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+    /* ── chips ── */
+    .result-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--navy3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.35rem 0.7rem;
+      font-size: 0.72rem;
     }
+
+    /* ── leaderboard rows ── */
+    .lb-row {
+      background: var(--navy2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+    .lb-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: none;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.12s;
+    }
+    .lb-toggle:hover { background: rgba(255,255,255,0.03); }
+
+    /* rank badges */
+    .rank-badge {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+      background: var(--navy3);
+      color: var(--muted);
+    }
+    .rank-1 { background: #2a2000; border-color: #b8860b; color: #f5c518; }
+    .rank-2 { background: #1a2228; border-color: #607080; color: #adc8d8; }
+    .rank-3 { background: #221a0f; border-color: #8b5e1a; color: #d4924a; }
+
+    /* pick cards inside detail */
+    .pick-card {
+      background: var(--navy);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.6rem 0.75rem;
+    }
+    .pick-card.hit   { border-color: #1a8a3a; background: #0d1f12; }
+    .pick-card.miss  { border-color: #6b1520; background: #1a0b0d; }
+
+    /* podium */
+    .podium-card {
+      background: var(--navy2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem 0.5rem;
+      text-align: center;
+    }
+    .podium-1 { border-color: #b8860b; background: #1a1500; }
+
+    /* skeleton */
     .skeleton {
-      background: linear-gradient(100deg, rgba(31,41,55,.5) 40%, rgba(55,65,81,.65) 50%, rgba(31,41,55,.5) 60%);
+      background: linear-gradient(90deg, var(--navy2) 25%, var(--navy3) 50%, var(--navy2) 75%);
       background-size: 200% 100%;
-      animation: shimmer 1.2s infinite linear;
+      animation: shimmer 1.3s infinite linear;
+      border-radius: 8px;
+      height: 52px;
+      margin-bottom: 0.5rem;
     }
     @keyframes shimmer { to { background-position: -200% 0; } }
-    .fade-in { animation: fadeIn .35s ease both; }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to   { opacity: 1; transform: none; }
+
+    .fade-in { animation: fadeIn 0.25s ease both; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; } }
+
+    /* status messages */
+    .msg-ok   { background: #0d1f12; border: 1px solid #1a8a3a; color: #5ddc80; border-radius: 8px; padding: 0.75rem 1rem; font-weight: 700; font-size: 0.85rem; }
+    .msg-err  { background: #1a0b0d; border: 1px solid #6b1520; color: #f06070; border-radius: 8px; padding: 0.75rem 1rem; font-weight: 700; font-size: 0.85rem; }
+    .msg-warn { background: #1a1500; border: 1px solid #b8860b; color: #e0b030; border-radius: 8px; padding: 0.75rem 1rem; font-weight: 700; font-size: 0.85rem; }
+
+    /* accent text colors */
+    .c-cyan  { color: var(--cyan); }
+    .c-pink  { color: var(--pink); }
+    .c-muted { color: var(--muted); }
+    .c-gold  { color: #f5c518; }
+    .c-green { color: #5ddc80; }
+    .c-red   { color: #f06070; }
+
+    /* semi chips */
+    .semi-chip {
+      border: 1px solid var(--border);
+      background: var(--navy3);
+      border-radius: 20px;
+      padding: 0.2rem 0.65rem;
+      font-size: 0.72rem;
+      font-weight: 700;
     }
+    .semi-chip.hit  { border-color: #1a8a3a; color: #5ddc80; background: #0d1f12; }
+    .semi-chip.miss { border-color: #6b1520; color: #f06070; background: #1a0b0d; text-decoration: line-through; }
   </style>
 </head>
-<body class="bg-[#0b0f19] bg-gradient-to-br from-[#0b0f19] via-[#111827] to-[#070a12] text-gray-200 min-h-screen font-sans antialiased py-10 px-4 sm:px-6">
+<body class="min-h-screen py-8 px-4 sm:px-6">
 
-  <div class="max-w-3xl mx-auto">
+  <div class="max-w-2xl mx-auto">
 
+    <!-- HEADER -->
     <header class="text-center mb-8">
-      <div class="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-4 py-1.5 rounded-full text-amber-400 text-sm font-bold tracking-wide uppercase mb-4">
-        <i class="fa-solid fa-futbol"></i> Quiniela Mundial 2026
+      <!-- Logo Epixlife mark -->
+      <div class="flex items-center justify-center gap-2 mb-4">
+        <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="10" y1="10" x2="90" y2="90" stroke="url(#g1)" stroke-width="20" stroke-linecap="round"/>
+          <line x1="90" y1="10" x2="10" y2="90" stroke="url(#g2)" stroke-width="20" stroke-linecap="round"/>
+          <defs>
+            <linearGradient id="g1" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#00c2d4"/>
+              <stop offset="1" stop-color="#0090a8"/>
+            </linearGradient>
+            <linearGradient id="g2" x1="90" y1="10" x2="10" y2="90" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#e8215a"/>
+              <stop offset="1" stop-color="#b01040"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="text-left">
+          <div class="text-xl font-black tracking-tight" style="color:var(--text)">
+            Epix<span style="color:var(--cyan)">Mundial</span>
+          </div>
+          <div class="text-[10px] font-bold uppercase tracking-widest" style="color:var(--muted)">World Cup 2026</div>
+        </div>
       </div>
-      <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white uppercase mb-2">Mundial Blaster</h1>
-      <p class="text-gray-400 text-sm sm:text-base">Haz tus predicciones y sigue la clasificación en directo.</p>
+      <p style="color:var(--muted); font-size:0.85rem;">Haz tus predicciones y sigue la clasificación en directo.</p>
     </header>
 
-    <nav class="grid grid-cols-2 gap-3 mb-6" role="tablist">
-      <button class="tab-btn tab-active py-3 rounded-xl font-black uppercase tracking-wide text-sm transition-all" data-tab="picks" role="tab" aria-selected="true">
-        <i class="fa-solid fa-pen-to-square mr-1"></i> Predicciones
+    <!-- TABS -->
+    <nav class="grid grid-cols-2 gap-2 mb-6" role="tablist">
+      <button class="tab-btn tab-active" data-tab="picks" role="tab" aria-selected="true">
+        <i class="fa-solid fa-pen-to-square mr-1.5"></i>Predicciones
       </button>
-      <button class="tab-btn py-3 rounded-xl font-black uppercase tracking-wide text-sm transition-all" data-tab="board" role="tab" aria-selected="false">
-        <i class="fa-solid fa-ranking-star mr-1"></i> Clasificación
+      <button class="tab-btn" data-tab="board" role="tab" aria-selected="false">
+        <i class="fa-solid fa-ranking-star mr-1.5"></i>Clasificación
       </button>
     </nav>
 
-    <!-- ════════════ PESTAÑA 1 · FORMULARIO ════════════ -->
+    <!-- ═══════════ PESTAÑA PREDICCIONES ═══════════ -->
     <section id="panel-picks" role="tabpanel">
-      <div class="text-center">
+      <div class="text-center mb-4">
         <span id="deadline-chip" class="hidden"></span>
       </div>
 
-      <form id="prediction-form" class="glass-panel rounded-2xl p-6 sm:p-8 shadow-2xl space-y-8">
+      <form id="prediction-form" class="card p-6 sm:p-8 space-y-6">
 
+        <!-- Nombre -->
         <div>
-          <label class="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Nombre del jugador</label>
-          <input type="text" name="playerName" required maxlength="40" placeholder="Tu nombre visible" class="input-field text-lg font-bold" autocomplete="nickname">
-          <p class="text-[11px] text-gray-500 mt-2 font-medium">Si envías otra vez con el mismo nombre, tus predicciones se actualizan (hasta el cierre).</p>
+          <label class="field-label" style="color:var(--muted)">Nombre del jugador</label>
+          <input type="text" name="playerName" required maxlength="40" placeholder="Tu nombre en la quiniela" class="input-field" style="font-size:1rem;font-weight:700;" autocomplete="nickname">
+          <p class="mt-2" style="font-size:0.72rem;color:var(--muted)">Enviar de nuevo con el mismo nombre actualiza tus picks hasta el cierre.</p>
         </div>
 
-        <hr class="border-gray-800">
+        <hr class="divider">
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <!-- Campeón + Subcampeón -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-black text-amber-400 uppercase tracking-wider mb-2">
-              <i class="fa-solid fa-trophy mr-1"></i> Campeón (50p)
-            </label>
+            <label class="field-label c-gold"><i class="fa-solid fa-trophy mr-1"></i>Campeón · 50 pts</label>
             <input type="text" name="champion" required maxlength="60" list="team-list" placeholder="País ganador" class="input-field">
           </div>
           <div>
-            <label class="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2">
-              <i class="fa-solid fa-medal mr-1"></i> Subcampeón (30p)
-            </label>
+            <label class="field-label" style="color:var(--muted)"><i class="fa-solid fa-medal mr-1"></i>Subcampeón · 30 pts</label>
             <input type="text" name="runnerUp" required maxlength="60" list="team-list" placeholder="Segundo puesto" class="input-field">
           </div>
           <div>
-            <label class="block text-xs font-black text-orange-400 uppercase tracking-wider mb-2">
-              <i class="fa-solid fa-futbol mr-1"></i> Máximo Goleador (25p)
-            </label>
-            <input type="text" name="goldenBoot" required maxlength="60" placeholder="Jugador con más goles (ej. Mbappé)" class="input-field">
+            <label class="field-label" style="color:var(--cyan)"><i class="fa-solid fa-futbol mr-1"></i>Máximo Goleador · 25 pts</label>
+            <input type="text" name="goldenBoot" required maxlength="60" placeholder="Ej. Mbappé" class="input-field">
           </div>
           <div>
-            <label class="block text-xs font-black text-purple-400 uppercase tracking-wider mb-2">
-              <i class="fa-solid fa-gem mr-1"></i> Equipo Revelación (20p)
-            </label>
+            <label class="field-label" style="color:var(--pink)"><i class="fa-solid fa-gem mr-1"></i>Equipo Revelación · 20 pts</label>
             <input type="text" name="revelation" required maxlength="60" list="team-list" placeholder="La sorpresa del torneo" class="input-field">
           </div>
         </div>
 
-        <hr class="border-gray-800">
+        <hr class="divider">
 
+        <!-- Semifinalistas -->
         <div>
-          <label class="block text-xs font-black text-cyan-400 uppercase tracking-wider mb-4">
-            <i class="fa-solid fa-diagram-project mr-1"></i> Los 4 Semifinalistas (10p cada uno)
-          </label>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label class="field-label" style="color:var(--cyan)"><i class="fa-solid fa-diagram-project mr-1"></i>Los 4 Semifinalistas · 10 pts cada uno</label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
             <input type="text" name="semi1" required maxlength="60" list="team-list" placeholder="Semifinalista 1" class="input-field">
             <input type="text" name="semi2" required maxlength="60" list="team-list" placeholder="Semifinalista 2" class="input-field">
             <input type="text" name="semi3" required maxlength="60" list="team-list" placeholder="Semifinalista 3" class="input-field">
             <input type="text" name="semi4" required maxlength="60" list="team-list" placeholder="Semifinalista 4" class="input-field">
           </div>
-          <p class="text-[11px] text-gray-500 mt-3 font-medium">
-            * Incluye a tu campeón y a tu subcampeón entre los cuatro.
-          </p>
+          <p class="mt-2" style="font-size:0.72rem;color:var(--muted)">* Incluye a tu campeón y subcampeón entre los cuatro.</p>
         </div>
 
-        <button type="submit" id="submit-btn" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black text-lg py-4 rounded-xl shadow-lg shadow-cyan-500/20 transition-all transform hover:scale-[1.02] active:scale-95 uppercase tracking-wide flex justify-center items-center gap-2">
-          <span>Enviar predicciones</span>
-          <i class="fa-solid fa-paper-plane"></i>
+        <button type="submit" id="submit-btn" class="btn-primary">
+          <i class="fa-solid fa-paper-plane mr-2"></i>Enviar predicciones
         </button>
 
         <div id="status-message" class="hidden"></div>
       </form>
     </section>
 
-    <!-- ════════════ PESTAÑA 2 · CLASIFICACIÓN ════════════ -->
+    <!-- ═══════════ PESTAÑA CLASIFICACIÓN ═══════════ -->
     <section id="panel-board" role="tabpanel" class="hidden">
-      <div class="glass-panel rounded-2xl p-5 sm:p-7 shadow-2xl">
+      <div class="card p-5 sm:p-6">
         <div class="flex items-center justify-between gap-3 mb-5">
-          <h2 class="text-lg font-black text-white uppercase tracking-wide">
-            <i class="fa-solid fa-ranking-star text-amber-400 mr-1"></i> Clasificación
+          <h2 style="font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;">
+            <i class="fa-solid fa-ranking-star mr-1.5 c-cyan"></i>Clasificación
           </h2>
           <div class="flex items-center gap-3">
-            <span id="last-updated" class="text-[11px] text-gray-500 font-medium"></span>
-            <button id="refresh-btn" title="Actualizar" class="w-9 h-9 rounded-lg bg-gray-800/80 hover:bg-gray-700 border border-gray-700/60 text-gray-300 transition">
-              <i class="fa-solid fa-rotate"></i>
+            <span id="last-updated" class="c-muted" style="font-size:0.7rem;"></span>
+            <button id="refresh-btn" title="Actualizar" style="width:34px;height:34px;border-radius:6px;background:var(--navy3);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:background 0.12s;" onmouseover="this.style.background='var(--navy4)'" onmouseout="this.style.background='var(--navy3)'">
+              <i class="fa-solid fa-rotate" style="font-size:0.8rem;"></i>
             </button>
           </div>
         </div>
 
-        <div id="results-chips" class="flex flex-wrap gap-2 mb-6"></div>
+        <div id="results-chips" class="flex flex-wrap gap-2 mb-5"></div>
         <div id="board-status"></div>
         <div id="podium"></div>
         <div id="board-rows"></div>
       </div>
-      <p class="text-center text-[11px] text-gray-600 mt-4 font-medium">
-        <i class="fa-solid fa-rotate mr-1"></i>Se actualiza cada 60 s · Toca una fila para ver todas las predicciones
+      <p class="text-center mt-3" style="font-size:0.7rem;color:var(--muted);">
+        <i class="fa-solid fa-rotate mr-1"></i>Auto-refresco cada 60 s · Toca una fila para ver los picks completos
       </p>
     </section>
 
-    <footer class="text-center text-[11px] text-gray-600 mt-10 font-medium">
-      Mundial Blaster 2026 · Datos guardados en Google Sheets
+    <footer class="text-center mt-10" style="font-size:0.7rem;color:var(--muted);">
+      EpixMundial 2026 · <span style="color:var(--cyan);">Epixlife</span> · Datos en Google Sheets
     </footer>
   </div>
 
-  <!-- Sugerencias de equipos (se puede escribir libre — edita la lista si quieres) -->
+  <!-- Lista de equipos -->
   <datalist id="team-list">
     <option value="Alemania"></option>
     <option value="Arabia Saudí"></option>
@@ -181,6 +356,7 @@
     <option value="Austria"></option>
     <option value="Bélgica"></option>
     <option value="Bolivia"></option>
+    <option value="Bosnia y Herzegovina"></option>
     <option value="Brasil"></option>
     <option value="Cabo Verde"></option>
     <option value="Canadá"></option>
@@ -213,7 +389,6 @@
     <option value="Marruecos"></option>
     <option value="México"></option>
     <option value="Noruega"></option>
-    <option value="Nueva Caledonia"></option>
     <option value="Nueva Zelanda"></option>
     <option value="Países Bajos"></option>
     <option value="Panamá"></option>

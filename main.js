@@ -1,12 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════
-   MUNDIAL BLASTER 2026 — lógica del front-end
-   Pestañas · formulario de predicciones · clasificación interactiva
-   Backend: Google Apps Script (ver apps-script/Code.gs)
+   EpixMundial 2026 — lógica del front-end
    ═══════════════════════════════════════════════════════════════ */
 (() => {
   'use strict';
 
-  const REFRESH_MS = 60000; // auto-refresco de la clasificación
+  const REFRESH_MS = 60000;
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -15,15 +13,14 @@
     tab: 'picks',
     players: [],
     scoring: { champion: 50, runnerUp: 30, goldenBoot: 25, revelation: 20, semi: 10 },
-    expanded: new Set(), // filas abiertas que sobreviven al refresco
+    expanded: new Set(),
     deadline: null,
     locked: false,
     loading: false,
   };
 
-  /* ─────────────── utilidades ─────────────── */
+  /* ─── helpers ─── */
 
-  // Igual que en el backend: ignora mayúsculas, espacios y acentos
   const norm = s => String(s == null ? '' : s)
     .trim().toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -38,16 +35,16 @@
   const fmtDate = iso => {
     const d = new Date(iso);
     return isNaN(d) ? '' :
-      d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) +
-      ' · ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+      d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) + ' · ' +
+      d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
   };
 
-  const hitDot = h =>
-    h === true ? '<i class="fa-solid fa-circle-check text-emerald-400"></i>' :
-    h === false ? '<i class="fa-solid fa-circle-xmark text-red-400/60"></i>' :
-    '<i class="fa-regular fa-clock text-gray-600"></i>';
+  const hitIcon = h =>
+    h === true  ? '<i class="fa-solid fa-check c-green" style="font-size:0.8rem;"></i>' :
+    h === false ? '<i class="fa-solid fa-xmark c-red"   style="font-size:0.8rem;"></i>' :
+                  '<i class="fa-regular fa-clock c-muted" style="font-size:0.8rem;"></i>';
 
-  /* ─────────────── pestañas ─────────────── */
+  /* ─── tabs ─── */
 
   function switchTab(tab, { refresh = false } = {}) {
     state.tab = tab;
@@ -62,16 +59,11 @@
     history.replaceState(null, '', tab === 'board' ? '#clasificacion' : '#predicciones');
   }
 
-  /* ─────────────── formulario ─────────────── */
+  /* ─── form ─── */
 
   function showStatus(kind, html) {
     const el = $('#status-message');
-    const styles = {
-      ok: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
-      err: 'bg-red-500/10 text-red-400 border border-red-500/20',
-      warn: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
-    };
-    el.className = 'text-center text-sm font-bold py-3 px-4 rounded-lg fade-in ' + styles[kind];
+    el.className = 'fade-in msg-' + kind;
     el.innerHTML = html;
     el.classList.remove('hidden');
   }
@@ -93,19 +85,17 @@
       Object.keys(p).forEach(k => { p[k] = String(p[k]).replace(/\s+/g, ' ').trim(); });
 
       if (!urlReady()) {
-        return showStatus('warn',
-          '<i class="fa-solid fa-gear"></i> El backend aún no está conectado — pega la URL de tu aplicación web de Apps Script en <b>config.js</b>.');
+        return showStatus('warn', '<i class="fa-solid fa-gear mr-1"></i>Backend no conectado — pega la URL en config.js.');
       }
       const problem = validate(p);
-      if (problem) return showStatus('err', '<i class="fa-solid fa-triangle-exclamation"></i> ' + esc(problem));
+      if (problem) return showStatus('err', '<i class="fa-solid fa-triangle-exclamation mr-1"></i>' + esc(problem));
 
       btn.disabled = true;
       const original = btn.innerHTML;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Enviando...';
       $('#status-message').classList.add('hidden');
 
       try {
-        // text/plain evita el preflight CORS que Apps Script no puede responder
         const res = await fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -114,18 +104,15 @@
         const out = await res.json();
 
         if (out.ok) {
-          showStatus('ok',
-            `<i class="fa-solid fa-circle-check"></i> ¡${out.updated ? 'Predicciones actualizadas' : 'Predicciones guardadas'}, <b>${esc(p.playerName)}</b>! Vamos a la clasificación…`);
+          showStatus('ok', `<i class="fa-solid fa-circle-check mr-1"></i>¡${out.updated ? 'Predicciones actualizadas' : 'Predicciones guardadas'}, <b>${esc(p.playerName)}</b>! Vamos a la clasificación…`);
           setTimeout(() => switchTab('board', { refresh: true }), 1400);
         } else if (out.code === 'locked') {
-          showStatus('warn', '<i class="fa-solid fa-lock"></i> ' + esc(out.error || 'Las predicciones están cerradas.'));
+          showStatus('warn', '<i class="fa-solid fa-lock mr-1"></i>' + esc(out.error || 'Las predicciones están cerradas.'));
         } else {
-          throw new Error(out.error || 'Error desconocido del backend');
+          throw new Error(out.error || 'Error desconocido');
         }
       } catch (err) {
-        console.error('Fallo al enviar:', err);
-        showStatus('err',
-          '<i class="fa-solid fa-triangle-exclamation"></i> No se pudo enviar — revisa tu conexión y el despliegue de Apps Script.');
+        showStatus('err', '<i class="fa-solid fa-triangle-exclamation mr-1"></i>No se pudo enviar. Revisa la conexión o el despliegue de Apps Script.');
       } finally {
         btn.disabled = false;
         btn.innerHTML = original;
@@ -133,7 +120,7 @@
     });
   }
 
-  /* ─────────────── clasificación ─────────────── */
+  /* ─── leaderboard ─── */
 
   async function loadBoard({ silent = false } = {}) {
     if (!urlReady()) { renderSetupNotice(); return; }
@@ -153,9 +140,8 @@
       state.locked = !!data.locked;
       renderBoard(data);
       updateDeadlineUI();
-      $('#last-updated').textContent = 'Actualizado a las ' + new Date().toLocaleTimeString('es-ES');
+      $('#last-updated').textContent = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
     } catch (err) {
-      console.error('No se pudo cargar la clasificación:', err);
       if (!silent) renderBoardError(err);
     } finally {
       state.loading = false;
@@ -164,21 +150,20 @@
   }
 
   function renderSkeleton() {
-    $('#board-status').innerHTML =
-      Array.from({ length: 4 }, () => '<div class="skeleton h-14 rounded-xl mb-3"></div>').join('');
+    $('#board-status').innerHTML = Array.from({ length: 4 }, () => '<div class="skeleton"></div>').join('');
     $('#podium').innerHTML = '';
     $('#board-rows').innerHTML = '';
   }
 
   function renderSetupNotice() {
     $('#board-status').innerHTML = `
-      <div class="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5 text-sm fade-in">
-        <p class="font-black text-amber-400 mb-2"><i class="fa-solid fa-gear"></i> Falta un paso — conecta tu hoja de Google</p>
-        <ol class="list-decimal list-inside text-gray-400 space-y-1 text-xs">
-          <li>Abre la hoja de Google → <b>Extensiones → Apps Script</b></li>
-          <li>Pega el contenido de <b>apps-script/Code.gs</b> y ejecuta <b>setupSheets</b></li>
-          <li>Desplegar → Nueva implementación → <b>Aplicación web</b> (acceso: <i>Cualquier usuario</i>)</li>
-          <li>Copia la URL de la aplicación web en <b>config.js</b></li>
+      <div class="card-inner p-4 fade-in" style="font-size:0.82rem;">
+        <p style="font-weight:800;color:#e0b030;margin-bottom:0.5rem;"><i class="fa-solid fa-gear mr-1"></i>Falta conectar la hoja de Google</p>
+        <ol style="color:var(--muted);padding-left:1.2rem;line-height:1.8;">
+          <li>Abre la hoja → <b>Extensiones → Apps Script</b></li>
+          <li>Pega <b>apps-script/Code.gs</b> → ejecuta <b>setupSheets</b></li>
+          <li>Despliega como <b>Aplicación web</b> (acceso: <i>Cualquier usuario</i>)</li>
+          <li>Copia la URL en <b>config.js</b></li>
         </ol>
       </div>`;
     $('#podium').innerHTML = '';
@@ -187,12 +172,12 @@
 
   function renderBoardError(err) {
     $('#board-status').innerHTML = `
-      <div class="text-center py-10 fade-in">
-        <div class="text-3xl mb-2">📡</div>
-        <p class="text-red-400 font-bold mb-1">No se pudo cargar la clasificación</p>
-        <p class="text-gray-500 text-xs mb-4">${esc(err.message || err)}</p>
-        <button id="retry-btn" class="bg-gray-800 hover:bg-gray-700 text-white text-sm font-bold px-4 py-2 rounded-lg transition">
-          <i class="fa-solid fa-rotate"></i> Reintentar
+      <div class="fade-in" style="text-align:center;padding:2.5rem 0;">
+        <div style="font-size:2rem;margin-bottom:0.5rem;">📡</div>
+        <p style="color:#f06070;font-weight:700;margin-bottom:0.4rem;">No se pudo cargar la clasificación</p>
+        <p style="color:var(--muted);font-size:0.78rem;margin-bottom:1rem;">${esc(err.message || err)}</p>
+        <button id="retry-btn" style="background:var(--navy3);border:1px solid var(--border);color:var(--text);padding:0.5rem 1.2rem;border-radius:6px;font-weight:700;font-size:0.82rem;cursor:pointer;">
+          <i class="fa-solid fa-rotate mr-1"></i>Reintentar
         </button>
       </div>`;
     $('#podium').innerHTML = '';
@@ -208,13 +193,11 @@
 
     if (!ps.length) {
       status.innerHTML = `
-        <div class="text-center py-12 fade-in">
-          <div class="text-4xl mb-3">🎯</div>
-          <p class="text-white font-black mb-1">Todavía no hay predicciones</p>
-          <p class="text-gray-500 text-sm mb-4">¡Sé el primero en apuntarte!</p>
-          <button class="tab-jump bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-sm font-black px-5 py-2.5 rounded-lg uppercase tracking-wide transition">
-            Hacer mis predicciones
-          </button>
+        <div class="fade-in" style="text-align:center;padding:3rem 0;">
+          <div style="font-size:2.5rem;margin-bottom:0.75rem;">🎯</div>
+          <p style="font-weight:800;font-size:1rem;margin-bottom:0.4rem;">Todavía no hay predicciones</p>
+          <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.2rem;">¡Sé el primero en apuntarte!</p>
+          <button class="tab-jump btn-primary" style="width:auto;padding:0.65rem 1.5rem;font-size:0.82rem;">Hacer mis predicciones</button>
         </div>`;
       $('#podium').innerHTML = '';
       $('#board-rows').innerHTML = '';
@@ -226,21 +209,19 @@
     status.innerHTML = '';
     const scored = ps.some(p => p.points > 0);
     $('#podium').innerHTML = scored ? podiumHtml(ps) : `
-      <div class="text-center text-xs text-gray-500 font-bold mb-4 fade-in">
-        <i class="fa-regular fa-hourglass-half"></i>
-        Aún no hay resultados oficiales — todo el mundo tiene 0 puntos. La clasificación cobrará vida cuando lleguen los resultados.
+      <div class="fade-in" style="text-align:center;font-size:0.78rem;color:var(--muted);font-weight:700;margin-bottom:1.2rem;">
+        <i class="fa-regular fa-hourglass-half mr-1"></i>Sin resultados aún — todos en 0 pts. La clasificación se activará cuando lleguen los primeros resultados.
       </div>`;
     $('#board-rows').innerHTML = ps.map(rowHtml).join('');
   }
 
   function renderChips({ results = {}, scoring = state.scoring }) {
     const chip = (icon, label, val, pts) => `
-      <div class="flex items-center gap-2 bg-gray-900/60 border border-gray-700/40 rounded-full px-3 py-1.5 text-xs fade-in">
+      <div class="result-chip fade-in">
         <span>${icon}</span>
-        <span class="text-gray-400 font-bold uppercase tracking-wide">${label}</span>
-        <span class="${val ? 'text-amber-300 font-bold' : 'text-gray-500 italic'}">${val ? esc(val) : 'Por decidir'}</span>
-        <span class="text-gray-600">·</span>
-        <span class="text-cyan-400 font-bold">${pts}</span>
+        <span class="c-muted" style="font-weight:700;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.05em;">${label}</span>
+        <span style="font-weight:800;color:${val ? '#f5c518' : 'var(--muted)'};">${val ? esc(val) : 'Por decidir'}</span>
+        <span class="c-cyan" style="font-weight:700;">· ${pts}</span>
       </div>`;
     const semis = (results.semis || []).filter(Boolean);
     $('#results-chips').innerHTML =
@@ -248,7 +229,7 @@
       chip('🥈', 'Subcampeón', results.runnerUp, scoring.runnerUp + 'p') +
       chip('⚽', 'Goleador', results.goldenBoot, scoring.goldenBoot + 'p') +
       chip('💎', 'Revelación', results.revelation, scoring.revelation + 'p') +
-      chip('🔥', 'Semifinalistas', semis.join(', '), scoring.semi + 'p c/u');
+      chip('🔥', 'Final 4', semis.join(', '), scoring.semi + 'p c/u');
   }
 
   function podiumHtml(ps) {
@@ -257,64 +238,62 @@
       if (!p) return '<div></div>';
       const big = p.rank === 1;
       return `
-        <div class="text-center ${big ? '' : 'mt-8'} fade-in">
-          <div class="${big ? 'text-4xl' : 'text-3xl'}">${medal[p.rank] || '🏅'}</div>
-          <div class="glass-panel rounded-2xl px-3 py-4 mt-2 ${big ? 'border-amber-400/40 shadow-lg shadow-amber-500/10' : ''}">
-            <div class="font-black text-white truncate ${big ? 'text-lg' : 'text-sm'}">${esc(p.player)}</div>
-            <div class="${big ? 'text-2xl' : 'text-xl'} font-black text-cyan-400 mt-1">${p.points}<span class="text-xs text-gray-500 ml-1">pts</span></div>
+        <div style="text-align:center;${big ? '' : 'margin-top:2rem;'}">
+          <div style="font-size:${big ? '2.2rem' : '1.7rem'};margin-bottom:0.4rem;">${medal[p.rank] || '🏅'}</div>
+          <div class="podium-card ${big ? 'podium-1' : ''} fade-in">
+            <div style="font-weight:800;font-size:${big ? '1rem' : '0.82rem'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(p.player)}</div>
+            <div class="c-cyan" style="font-size:${big ? '1.4rem' : '1.1rem'};font-weight:900;margin-top:0.2rem;">${p.points}<span style="font-size:0.65rem;color:var(--muted);margin-left:2px;">pts</span></div>
           </div>
         </div>`;
     };
     const [first, second, third] = ps;
-    return `<div class="grid grid-cols-3 gap-3 sm:gap-4 mb-6 items-end">${card(second)}${card(first)}${card(third)}</div>`;
-  }
-
-  function miniIcons(p) {
-    const b = p.breakdown;
-    return `
-      <span title="Campeón">🏆${hitDot(b.champion.hit)}</span>
-      <span title="Subcampeón">🥈${hitDot(b.runnerUp.hit)}</span>
-      <span title="Goleador">⚽${hitDot(b.goldenBoot.hit)}</span>
-      <span title="Revelación">💎${hitDot(b.revelation.hit)}</span>
-      <span class="text-gray-400 font-bold ml-1" title="Semifinalistas acertados">${b.semis.hits}/4</span>`;
+    return `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem;align-items:flex-end;margin-bottom:1.25rem;">${card(second)}${card(first)}${card(third)}</div>`;
   }
 
   function rowHtml(p) {
     const key = norm(p.player);
     const open = state.expanded.has(key);
-    const rankBadge =
-      p.rank === 1 ? 'bg-amber-400/20 text-amber-300 border-amber-400/40' :
-      p.rank === 2 ? 'bg-gray-300/15 text-gray-200 border-gray-400/40' :
-      p.rank === 3 ? 'bg-orange-400/15 text-orange-300 border-orange-400/40' :
-      'bg-gray-800 text-gray-400 border-gray-700';
+    const rankClass = p.rank === 1 ? 'rank-1' : p.rank === 2 ? 'rank-2' : p.rank === 3 ? 'rank-3' : '';
+    const b = p.breakdown;
+    const miniHits = `
+      <span style="font-size:0.7rem;display:flex;align-items:center;gap:0.5rem;">
+        <span>🏆${hitIcon(b.champion.hit)}</span>
+        <span>🥈${hitIcon(b.runnerUp.hit)}</span>
+        <span>⚽${hitIcon(b.goldenBoot.hit)}</span>
+        <span>💎${hitIcon(b.revelation.hit)}</span>
+        <span class="c-muted" style="font-weight:700;">${b.semis.hits}/4</span>
+      </span>`;
     return `
-      <div class="glass-panel rounded-xl mb-2.5 overflow-hidden fade-in">
-        <button type="button" class="row-toggle w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.03] transition" data-player="${esc(key)}">
-          <span class="w-9 h-9 shrink-0 rounded-lg border ${rankBadge} flex items-center justify-center font-black text-sm">${p.rank}</span>
-          <span class="flex-1 min-w-0">
-            <span class="block font-bold text-white truncate">${esc(p.player)}</span>
-            <span class="block text-[11px] text-gray-500">${fmtDate(p.submittedAt)}</span>
-          </span>
-          <span class="hidden sm:flex items-center gap-1.5 text-xs">${miniIcons(p)}</span>
-          <span class="text-xl font-black text-cyan-400 w-16 text-right">${p.points}<span class="text-[10px] text-gray-500 ml-0.5">pts</span></span>
-          <i class="fa-solid fa-chevron-down text-gray-500 text-xs transition-transform duration-200 ${open ? 'rotate-180' : ''}"></i>
+      <div class="lb-row fade-in">
+        <button type="button" class="lb-toggle row-toggle" data-player="${esc(key)}">
+          <div class="rank-badge ${rankClass}">${p.rank}</div>
+          <div style="flex:1;min-width:0;text-align:left;">
+            <div style="font-weight:700;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(p.player)}</div>
+            <div class="c-muted" style="font-size:0.7rem;">${fmtDate(p.submittedAt)}</div>
+          </div>
+          <div class="hidden sm:flex">${miniHits}</div>
+          <div class="c-cyan" style="font-size:1.1rem;font-weight:900;min-width:52px;text-align:right;">${p.points}<span style="font-size:0.62rem;color:var(--muted);margin-left:2px;">pts</span></div>
+          <i class="fa-solid fa-chevron-down c-muted" style="font-size:0.7rem;transition:transform 0.2s;${open ? 'transform:rotate(180deg);' : ''}"></i>
         </button>
-        <div class="row-details ${open ? '' : 'hidden'} border-t border-gray-800 px-4 py-4 bg-black/20">${detailsHtml(p)}</div>
+        <div class="row-details ${open ? '' : 'hidden'}" style="border-top:1px solid var(--border);padding:1rem;background:var(--navy);">
+          ${detailsHtml(p)}
+        </div>
       </div>`;
   }
 
-  function pickCard(label, icon, pick, judged, pts) {
-    const st = judged.hit === true
-      ? { ring: 'border-emerald-500/40', badge: `<span class="text-emerald-400 font-black">+${judged.points}</span>` }
+  function pickCardHtml(label, icon, pick, judged, pts) {
+    const cls = judged.hit === true ? 'hit' : judged.hit === false ? 'miss' : '';
+    const badge = judged.hit === true
+      ? `<span class="c-green" style="font-weight:800;font-size:0.8rem;">+${judged.points}</span>`
       : judged.hit === false
-        ? { ring: 'border-red-500/20', badge: '<span class="text-red-400/70 font-bold">0</span>' }
-        : { ring: 'border-gray-700/40', badge: '<span class="text-gray-500 font-bold">…</span>' };
+        ? `<span class="c-red" style="font-weight:700;font-size:0.8rem;">0</span>`
+        : `<span class="c-muted" style="font-weight:700;font-size:0.8rem;">…</span>`;
     return `
-      <div class="rounded-lg border ${st.ring} bg-gray-900/40 px-3 py-2.5">
-        <div class="text-[10px] font-black uppercase tracking-wider text-gray-500 mb-1">${icon} ${label} <span class="text-gray-600">(${pts}p)</span></div>
-        <div class="flex items-center justify-between gap-2">
-          <span class="font-bold text-white text-sm truncate">${esc(pick)}</span>
-          <span class="flex items-center gap-1.5 text-sm">${hitDot(judged.hit)} ${st.badge}</span>
+      <div class="pick-card ${cls}">
+        <div style="font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:0.3rem;">${icon} ${label} (${pts}p)</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;">
+          <span style="font-weight:700;font-size:0.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(pick)}</span>
+          <span style="display:flex;align-items:center;gap:0.3rem;">${hitIcon(judged.hit)}${badge}</span>
         </div>
       </div>`;
   }
@@ -323,22 +302,20 @@
     const b = p.breakdown;
     const sc = state.scoring;
     const semiChip = pp => {
-      const cls = pp.hit === true ? 'border-emerald-500/40 text-emerald-300' :
-        pp.hit === false ? 'border-red-500/20 text-gray-500 line-through' :
-        'border-gray-700/40 text-gray-300';
-      return `<span class="border ${cls} bg-gray-900/40 rounded-full px-2.5 py-1 text-xs font-bold">${esc(pp.pick)}</span>`;
+      const cls = pp.hit === true ? 'hit' : pp.hit === false ? 'miss' : '';
+      return `<span class="semi-chip ${cls}">${esc(pp.pick)}</span>`;
     };
     return `
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3">
-        ${pickCard('Campeón', '🏆', p.picks.champion, b.champion, sc.champion)}
-        ${pickCard('Subcampeón', '🥈', p.picks.runnerUp, b.runnerUp, sc.runnerUp)}
-        ${pickCard('Goleador', '⚽', p.picks.goldenBoot, b.goldenBoot, sc.goldenBoot)}
-        ${pickCard('Revelación', '💎', p.picks.revelation, b.revelation, sc.revelation)}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.75rem;">
+        ${pickCardHtml('Campeón', '🏆', p.picks.champion, b.champion, sc.champion)}
+        ${pickCardHtml('Subcampeón', '🥈', p.picks.runnerUp, b.runnerUp, sc.runnerUp)}
+        ${pickCardHtml('Goleador', '⚽', p.picks.goldenBoot, b.goldenBoot, sc.goldenBoot)}
+        ${pickCardHtml('Revelación', '💎', p.picks.revelation, b.revelation, sc.revelation)}
       </div>
-      <div class="text-[10px] font-black uppercase tracking-wider text-gray-500 mb-1.5">
-        🔥 Semifinalistas <span class="text-gray-600">(${sc.semi}p c/u — ${b.semis.hits} aciertos, +${b.semis.points})</span>
+      <div style="font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:0.5rem;">
+        🔥 Semifinalistas — ${b.semis.hits} aciertos · +${b.semis.points} pts
       </div>
-      <div class="flex flex-wrap gap-1.5">${(b.semis.perPick || []).map(semiChip).join('')}</div>`;
+      <div style="display:flex;flex-wrap:wrap;gap:0.4rem;">${(b.semis.perPick || []).map(semiChip).join('')}</div>`;
   }
 
   function bindRows() {
@@ -348,48 +325,43 @@
       const details = btn.parentElement.querySelector('.row-details');
       const chev = btn.querySelector('.fa-chevron-down');
       const nowOpen = !details.classList.toggle('hidden');
-      chev.classList.toggle('rotate-180', nowOpen);
+      chev.style.transform = nowOpen ? 'rotate(180deg)' : '';
       nowOpen ? state.expanded.add(btn.dataset.player) : state.expanded.delete(btn.dataset.player);
     });
   }
 
-  /* ─────────────── cuenta atrás del cierre ─────────────── */
+  /* ─── deadline chip ─── */
 
   function updateDeadlineUI() {
     const el = $('#deadline-chip');
-    if (!el) return;
-    if (!state.deadline) { el.classList.add('hidden'); return; }
-
+    if (!el || !state.deadline) { el && el.classList.add('hidden'); return; }
     const ms = new Date(state.deadline) - Date.now();
     el.classList.remove('hidden');
     if (state.locked || ms <= 0) {
-      el.className = 'inline-flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 mb-4 fade-in';
-      el.innerHTML = '<i class="fa-solid fa-lock"></i> Predicciones cerradas — el torneo ya ha comenzado';
+      el.className = 'msg-warn fade-in';
+      el.style.cssText = 'display:inline-flex;align-items:center;gap:0.4rem;font-size:0.78rem;';
+      el.innerHTML = '<i class="fa-solid fa-lock"></i> Predicciones cerradas — el torneo ha comenzado';
       const btn = $('#submit-btn');
       btn.disabled = true;
-      btn.classList.add('opacity-50', 'cursor-not-allowed');
+      btn.style.opacity = '0.4';
     } else {
       const d = Math.floor(ms / 86400000);
       const h = Math.floor(ms % 86400000 / 3600000);
       const m = Math.floor(ms % 3600000 / 60000);
-      el.className = 'inline-flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 mb-4 fade-in';
-      el.innerHTML = `<i class="fa-regular fa-clock"></i> Las predicciones se cierran en ${d}d ${h}h ${m}m`;
+      el.className = 'result-chip fade-in';
+      el.innerHTML = `<i class="fa-regular fa-clock c-cyan"></i> <span class="c-muted" style="font-weight:700;">Cierre en</span> <span style="font-weight:800;">${d}d ${h}h ${m}m</span>`;
     }
   }
 
-  /* ─────────────── inicio ─────────────── */
+  /* ─── init ─── */
 
   function init() {
     $$('.tab-btn').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
     $('#refresh-btn').addEventListener('click', () => loadBoard());
     bindForm();
     bindRows();
-
     if (location.hash === '#clasificacion') switchTab('board');
-
-    // Carga los datos (y la cuenta atrás) aunque se empiece en el formulario
     loadBoard({ silent: state.tab !== 'board' });
-
     setInterval(() => {
       if (state.tab === 'board' && document.visibilityState === 'visible') loadBoard({ silent: true });
     }, REFRESH_MS);
