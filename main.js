@@ -1,5 +1,7 @@
-/* ═══════════════════════════════════════════════════════════════
+﻿/* ═══════════════════════════════════════════════════════════════
    EpixMundial 2026 — lógica del front-end
+   Predicciones cerradas: la pestaña de envío se sustituyó por
+   "Probabilidades" (probabilidad de ganar la quiniela ahora mismo).
    ═══════════════════════════════════════════════════════════════ */
 (() => {
   'use strict';
@@ -10,13 +12,35 @@
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
   const state = {
-    tab: 'picks',
+    tab: 'probs',
     players: [],
     scoring: { champion: 50, runnerUp: 30, goldenBoot: 25, revelation: 20, mvp: 20, semi: 10 },
     expanded: new Set(),
     deadline: null,
     locked: false,
     loading: false,
+  };
+
+  /* ─── Probabilidades de victoria (hardcoded) ───
+     Calculadas a mano el 3 de julio de 2026, con el Mundial en fase
+     eliminatoria (octavos), sobre la tabla de predicciones corregida.
+     Se ignoran las faltas de ortografía en los nombres (p. ej. "Halaand"
+     cuenta como Haaland): cada pick se evalúa por lo que quiso decir.
+     El modelo pondera la solidez de cada boleto: probabilidad del
+     campeón/subcampeón, del goleador, del MVP, de que la "revelación"
+     siga viva y de cuántos semifinalistas alcanzan la ronda.
+     Nota: Bosnia, Senegal y Ecuador (revelaciones) ya están eliminadas.
+     Las probabilidades suman 100 %. Clave por nombre normalizado. */
+  const PROBABILITIES = {
+    'carlos':             { prob: 16.1, note: 'Boleto más completo: Francia campeón, Marruecos (revelación) vivo en octavos, Mbappé goleador, Lamine Yamal MVP y 4 semifinalistas fuertes.' },
+    'nacho':              { prob: 14.3, note: 'España (gran favorita) + Mbappé y 4 buenas semis; le pesa que Bosnia (revelación) ya esté eliminada.' },
+    'ben':                { prob: 13.4, note: 'España campeona y una doble apuesta a Lamine Yamal (goleador y MVP) que puntúa dos veces si estalla; solo pierde Senegal (revelación), ya fuera.' },
+    'bogdan starchenko':  { prob: 11.9, note: 'Semifinalistas muy sólidos (España, Brasil, Argentina, Francia) y Lamine Yamal MVP; Brasil campeón es menos probable y Turquía (revelación) casi descartada.' },
+    'daini carolina':     { prob: 11.7, note: 'España campeona y Lamine Yamal MVP; Haaland (goleador) y Noruega (revelación) dependen de que Noruega siga con vida.' },
+    'orazio':             { prob: 11.6, note: 'Francia + semis fuertes (Francia, Inglaterra, España) y Lamine Yamal MVP; Japón como revelación es una apuesta arriesgada.' },
+    'lucas':              { prob:  9.5, note: 'EE. UU. (revelación) sigue vivo como anfitrión en octavos, pero Alemania campeón y Míchel Olise MVP son poco probables.' },
+    'victor':             { prob:  8.3, note: 'Sus semifinalistas son sólidos, pero Portugal campeón y Bélgica como "revelación" son apuestas arriesgadas.' },
+    'juan manuel cr7':    { prob:  3.2, note: 'Muy dependiente de sus semifinalistas: Ecuador (revelación) ya está eliminado y Portugal campeón + Cristiano Ronaldo MVP son poco probables.' },
   };
 
   /* ─── helpers ─── */
@@ -47,6 +71,9 @@
     h === false ? '<i class="fa-solid fa-xmark c-red"   style="font-size:0.8rem;"></i>' :
                   '<i class="fa-regular fa-clock c-muted" style="font-size:0.8rem;"></i>';
 
+  // ¿es un semifinalista escrito con nombre de equipo (y no de jugador)? — heurístico laxo
+  const probFor = player => PROBABILITIES[norm(player)] || null;
+
   /* ─── tabs ─── */
 
   function switchTab(tab, { refresh = false } = {}) {
@@ -56,82 +83,21 @@
       b.classList.toggle('tab-active', active);
       b.setAttribute('aria-selected', active);
     });
-    $('#panel-picks').classList.toggle('hidden', tab !== 'picks');
+    $('#panel-probs').classList.toggle('hidden', tab !== 'probs');
     $('#panel-board').classList.toggle('hidden', tab !== 'board');
-    if (tab === 'board' && (refresh || !state.players.length)) loadBoard();
-    history.replaceState(null, '', tab === 'board' ? '#clasificacion' : '#predicciones');
+    if (refresh || !state.players.length) loadBoard({ silent: tab !== 'board' && tab !== 'probs' });
+    history.replaceState(null, '', tab === 'board' ? '#clasificacion' : '#probabilidades');
   }
 
-  /* ─── form ─── */
-
-  function showStatus(kind, html) {
-    const el = $('#status-message');
-    el.className = 'fade-in msg-' + kind;
-    el.innerHTML = html;
-    el.classList.remove('hidden');
-  }
-
-  function validate(p) {
-    const semis = [p.semi1, p.semi2, p.semi3, p.semi4].map(norm);
-    if (new Set(semis).size !== 4) return 'Tus cuatro semifinalistas deben ser equipos distintos.';
-    if (norm(p.champion) === norm(p.runnerUp)) return 'El campeón y el subcampeón no pueden ser el mismo equipo.';
-    if (!semis.includes(norm(p.champion))) return 'Tu campeón debe estar entre tus cuatro semifinalistas.';
-    if (!semis.includes(norm(p.runnerUp))) return 'Tu subcampeón debe estar entre tus cuatro semifinalistas.';
-    return null;
-  }
-
-  function bindForm() {
-    $('#prediction-form').addEventListener('submit', async e => {
-      e.preventDefault();
-      const btn = $('#submit-btn');
-      const p = Object.fromEntries(new FormData(e.target).entries());
-      Object.keys(p).forEach(k => { p[k] = String(p[k]).replace(/\s+/g, ' ').trim(); });
-
-      if (!urlReady()) {
-        return showStatus('warn', '<i class="fa-solid fa-gear mr-1"></i>Backend no conectado — pega la URL en config.js.');
-      }
-      const problem = validate(p);
-      if (problem) return showStatus('err', '<i class="fa-solid fa-triangle-exclamation mr-1"></i>' + esc(problem));
-
-      btn.disabled = true;
-      const original = btn.innerHTML;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Enviando...';
-      $('#status-message').classList.add('hidden');
-
-      try {
-        const res = await fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(p),
-        });
-        const out = await res.json();
-
-        if (out.ok) {
-          showStatus('ok', `<i class="fa-solid fa-circle-check mr-1"></i>¡${out.updated ? 'Predicciones actualizadas' : 'Predicciones guardadas'}, <b>${esc(p.playerName)}</b>! Vamos a la clasificación…`);
-          setTimeout(() => switchTab('board', { refresh: true }), 1400);
-        } else if (out.code === 'locked') {
-          showStatus('warn', '<i class="fa-solid fa-lock mr-1"></i>' + esc(out.error || 'Las predicciones están cerradas.'));
-        } else {
-          throw new Error(out.error || 'Error desconocido');
-        }
-      } catch (err) {
-        showStatus('err', '<i class="fa-solid fa-triangle-exclamation mr-1"></i>No se pudo enviar. Revisa la conexión o el despliegue de Apps Script.');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = original;
-      }
-    });
-  }
-
-  /* ─── leaderboard ─── */
+  /* ─── datos ─── */
 
   async function loadBoard({ silent = false } = {}) {
     if (!urlReady()) { renderSetupNotice(); return; }
     if (state.loading) return;
     state.loading = true;
     const icon = $('#refresh-btn i');
-    icon.classList.add('fa-spin');
-    if (!silent && !state.players.length) renderSkeleton();
+    if (icon) icon.classList.add('fa-spin');
+    if (!silent && !state.players.length) { renderSkeleton(); renderProbsSkeleton(); }
 
     try {
       const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=leaderboard&cb=${Date.now()}`);
@@ -141,16 +107,81 @@
       state.players = data.players || [];
       state.deadline = data.deadline;
       state.locked = !!data.locked;
+      if (data.scoring) state.scoring = data.scoring;
       renderBoard(data);
-      updateDeadlineUI();
+      renderProbs();
       $('#last-updated').textContent = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
     } catch (err) {
-      if (!silent) renderBoardError(err);
+      if (!silent) { renderBoardError(err); renderProbsError(err); }
     } finally {
       state.loading = false;
-      icon.classList.remove('fa-spin');
+      if (icon) icon.classList.remove('fa-spin');
     }
   }
+
+  /* ─── probabilidades ─── */
+
+  function renderProbsSkeleton() {
+    $('#probs-rows').innerHTML = Array.from({ length: 5 }, () => '<div class="skeleton"></div>').join('');
+  }
+
+  function renderProbsError(err) {
+    $('#probs-rows').innerHTML = `
+      <div class="fade-in" style="text-align:center;padding:2rem 0;">
+        <div style="font-size:2rem;margin-bottom:0.5rem;">📡</div>
+        <p style="color:#f06070;font-weight:700;margin-bottom:0.4rem;">No se pudieron cargar los jugadores</p>
+        <p style="color:var(--muted);font-size:0.78rem;">${esc(err.message || err)}</p>
+      </div>`;
+  }
+
+  function renderProbs() {
+    const box = $('#probs-rows');
+    if (!box) return;
+
+    // Empareja cada jugador con su probabilidad hardcodeada y ordena de mayor a menor
+    const rows = state.players
+      .map(p => ({ p, meta: probFor(p.player) }))
+      .filter(r => r.meta)
+      .sort((a, b) => b.meta.prob - a.meta.prob);
+
+    if (!rows.length) {
+      box.innerHTML = `
+        <div class="fade-in" style="text-align:center;padding:2.5rem 0;">
+          <div style="font-size:2.5rem;margin-bottom:0.75rem;">🎯</div>
+          <p style="font-weight:800;font-size:1rem;">Todavía no hay jugadores</p>
+        </div>`;
+      return;
+    }
+
+    const max = rows[0].meta.prob;
+    box.innerHTML = rows.map((r, i) => probRowHtml(r.p, r.meta, i + 1, max)).join('');
+  }
+
+  function probRowHtml(p, meta, rank, max) {
+    const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
+    const width = Math.max(4, Math.round((meta.prob / max) * 100));
+    const champion = (p.picks && p.picks.champion) || '—';
+    return `
+      <div class="lb-row fade-in" style="padding:0.85rem 1rem;">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <div class="rank-badge ${rankClass}">${rank}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:0.5rem;">
+              <span style="font-weight:800;font-size:0.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(p.player)}</span>
+              <span class="c-cyan" style="font-weight:900;font-size:1.15rem;">${meta.prob.toFixed(1)}<span style="font-size:0.62rem;color:var(--muted);margin-left:2px;">%</span></span>
+            </div>
+            <div style="height:7px;background:var(--navy);border:1px solid var(--border);border-radius:20px;overflow:hidden;margin-top:0.4rem;">
+              <div style="height:100%;width:${width}%;background:linear-gradient(90deg,var(--cyan),#0090a8);border-radius:20px;"></div>
+            </div>
+            <div class="c-muted" style="font-size:0.72rem;margin-top:0.45rem;">
+              <span style="font-weight:700;color:#f5c518;">🏆 ${esc(champion)}</span> · ${esc(meta.note)}
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  /* ─── clasificación ─── */
 
   function renderSkeleton() {
     $('#board-status').innerHTML = Array.from({ length: 4 }, () => '<div class="skeleton"></div>').join('');
@@ -171,6 +202,7 @@
       </div>`;
     $('#podium').innerHTML = '';
     $('#board-rows').innerHTML = '';
+    $('#probs-rows').innerHTML = '';
   }
 
   function renderBoardError(err) {
@@ -199,13 +231,9 @@
         <div class="fade-in" style="text-align:center;padding:3rem 0;">
           <div style="font-size:2.5rem;margin-bottom:0.75rem;">🎯</div>
           <p style="font-weight:800;font-size:1rem;margin-bottom:0.4rem;">Todavía no hay predicciones</p>
-          <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.2rem;">¡Sé el primero en apuntarte!</p>
-          <button class="tab-jump btn-primary" style="width:auto;padding:0.65rem 1.5rem;font-size:0.82rem;">Hacer mis predicciones</button>
         </div>`;
       $('#podium').innerHTML = '';
       $('#board-rows').innerHTML = '';
-      const jump = status.querySelector('.tab-jump');
-      if (jump) jump.addEventListener('click', () => switchTab('picks'));
       return;
     }
 
@@ -213,7 +241,7 @@
     const scored = ps.some(p => p.points > 0);
     $('#podium').innerHTML = scored ? podiumHtml(ps) : `
       <div class="fade-in" style="text-align:center;font-size:0.78rem;color:var(--muted);font-weight:700;margin-bottom:1.2rem;">
-        <i class="fa-regular fa-hourglass-half mr-1"></i>Sin resultados aún — todos en 0 pts. La clasificación se activará cuando lleguen los primeros resultados.
+        <i class="fa-regular fa-hourglass-half mr-1"></i>Sin resultados oficiales aún — todos en 0 pts. Mientras tanto, mira la pestaña <span class="c-cyan">Probabilidades</span>.
       </div>`;
     $('#board-rows').innerHTML = ps.map(rowHtml).join('');
   }
@@ -336,42 +364,19 @@
     });
   }
 
-  /* ─── deadline chip ─── */
-
-  function updateDeadlineUI() {
-    const el = $('#deadline-chip');
-    if (!el || !state.deadline) { el && el.classList.add('hidden'); return; }
-    const ms = new Date(state.deadline) - Date.now();
-    el.classList.remove('hidden');
-    if (state.locked || ms <= 0) {
-      el.className = 'msg-warn fade-in';
-      el.style.cssText = 'display:inline-flex;align-items:center;gap:0.4rem;font-size:0.78rem;';
-      el.innerHTML = '<i class="fa-solid fa-lock"></i> Predicciones cerradas — el torneo ha comenzado';
-      const btn = $('#submit-btn');
-      btn.disabled = true;
-      btn.style.opacity = '0.4';
-    } else {
-      const d = Math.floor(ms / 86400000);
-      const h = Math.floor(ms % 86400000 / 3600000);
-      const m = Math.floor(ms % 3600000 / 60000);
-      el.className = 'result-chip fade-in';
-      el.innerHTML = `<i class="fa-regular fa-clock c-cyan"></i> <span class="c-muted" style="font-weight:700;">Cierre en</span> <span style="font-weight:800;">${d}d ${h}h ${m}m</span>`;
-    }
-  }
-
   /* ─── init ─── */
 
   function init() {
     $$('.tab-btn').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
     $('#refresh-btn').addEventListener('click', () => loadBoard());
-    bindForm();
     bindRows();
     if (location.hash === '#clasificacion') switchTab('board');
-    loadBoard({ silent: state.tab !== 'board' });
+    loadBoard({ silent: false });
     setInterval(() => {
-      if (state.tab === 'board' && document.visibilityState === 'visible') loadBoard({ silent: true });
+      if (document.visibilityState === 'visible' && (state.tab === 'board' || state.tab === 'probs')) {
+        loadBoard({ silent: true });
+      }
     }, REFRESH_MS);
-    setInterval(updateDeadlineUI, 30000);
   }
 
   document.readyState === 'loading'

@@ -244,80 +244,38 @@
           <div class="text-[10px] font-bold uppercase tracking-widest" style="color:var(--muted)">World Cup 2026</div>
         </div>
       </div>
-      <p style="color:var(--muted); font-size:0.85rem;">Haz tus predicciones y sigue la clasificación en directo.</p>
+      <p style="color:var(--muted); font-size:0.85rem;">Predicciones cerradas — sigue las probabilidades de victoria y la clasificación en directo.</p>
     </header>
 
     <!-- TABS -->
     <nav class="grid grid-cols-2 gap-2 mb-6" role="tablist">
-      <button class="tab-btn tab-active" data-tab="picks" role="tab" aria-selected="true">
-        <i class="fa-solid fa-pen-to-square mr-1.5"></i>Predicciones
+      <button class="tab-btn tab-active" data-tab="probs" role="tab" aria-selected="true">
+        <i class="fa-solid fa-percent mr-1.5"></i>Probabilidades
       </button>
       <button class="tab-btn" data-tab="board" role="tab" aria-selected="false">
         <i class="fa-solid fa-ranking-star mr-1.5"></i>Clasificación
       </button>
     </nav>
 
-    <!-- ═══════════ PESTAÑA PREDICCIONES ═══════════ -->
-    <section id="panel-picks" role="tabpanel">
-      <div class="text-center mb-4">
-        <span id="deadline-chip" class="hidden"></span>
+    <!-- ═══════════ PESTAÑA PROBABILIDADES ═══════════ -->
+    <section id="panel-probs" role="tabpanel">
+      <div class="card p-5 sm:p-6">
+        <div class="flex items-center justify-between gap-3 mb-4">
+          <h2 style="font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;">
+            <i class="fa-solid fa-percent mr-1.5 c-cyan"></i>Probabilidad de victoria
+          </h2>
+          <span class="result-chip" style="font-size:0.7rem;"><i class="fa-solid fa-lock c-muted"></i> Predicciones cerradas</span>
+        </div>
+        <p class="c-muted" style="font-size:0.78rem;line-height:1.6;margin-bottom:1.25rem;">
+          Las predicciones se cerraron el 11 de junio. Estas son las probabilidades de que cada jugador gane la quiniela
+          <b>ahora mismo</b>, estimadas a partir del estado del torneo (fase eliminatoria) y de la solidez de cada boleto.
+          No sustituyen a la <span class="c-cyan">Clasificación</span>, que se activará con los resultados oficiales.
+        </p>
+        <div id="probs-rows"></div>
       </div>
-
-      <form id="prediction-form" class="card p-6 sm:p-8 space-y-6">
-
-        <!-- Nombre -->
-        <div>
-          <label class="field-label" style="color:var(--muted)">Nombre del jugador</label>
-          <input type="text" name="playerName" required maxlength="40" placeholder="Tu nombre en la quiniela" class="input-field" style="font-size:1rem;font-weight:700;" autocomplete="nickname">
-          <p class="mt-2" style="font-size:0.72rem;color:var(--muted)">Enviar de nuevo con el mismo nombre actualiza tus picks hasta el cierre.</p>
-        </div>
-
-        <hr class="divider">
-
-        <!-- Campeón + Subcampeón -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="field-label c-gold"><i class="fa-solid fa-trophy mr-1"></i>Campeón · 50 pts</label>
-            <input type="text" name="champion" required maxlength="60" list="team-list" placeholder="País ganador" class="input-field">
-          </div>
-          <div>
-            <label class="field-label" style="color:var(--muted)"><i class="fa-solid fa-medal mr-1"></i>Subcampeón · 30 pts</label>
-            <input type="text" name="runnerUp" required maxlength="60" list="team-list" placeholder="Segundo puesto" class="input-field">
-          </div>
-          <div>
-            <label class="field-label" style="color:var(--cyan)"><i class="fa-solid fa-futbol mr-1"></i>Máximo Goleador · 25 pts</label>
-            <input type="text" name="goldenBoot" required maxlength="60" placeholder="Ej. Mbappé" class="input-field">
-          </div>
-          <div>
-            <label class="field-label" style="color:var(--pink)"><i class="fa-solid fa-gem mr-1"></i>Equipo Revelación · 20 pts</label>
-            <input type="text" name="revelation" required maxlength="60" list="team-list" placeholder="La sorpresa del torneo" class="input-field">
-          </div>
-          <div class="sm:col-span-2">
-            <label class="field-label" style="color:#f5c518"><i class="fa-solid fa-star mr-1"></i>MVP del Torneo · 20 pts</label>
-            <input type="text" name="mvp" required maxlength="60" placeholder="Mejor jugador del torneo" class="input-field">
-          </div>
-        </div>
-
-        <hr class="divider">
-
-        <!-- Semifinalistas -->
-        <div>
-          <label class="field-label" style="color:var(--cyan)"><i class="fa-solid fa-diagram-project mr-1"></i>Los 4 Semifinalistas · 10 pts cada uno</label>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
-            <input type="text" name="semi1" required maxlength="60" list="team-list" placeholder="Semifinalista 1" class="input-field">
-            <input type="text" name="semi2" required maxlength="60" list="team-list" placeholder="Semifinalista 2" class="input-field">
-            <input type="text" name="semi3" required maxlength="60" list="team-list" placeholder="Semifinalista 3" class="input-field">
-            <input type="text" name="semi4" required maxlength="60" list="team-list" placeholder="Semifinalista 4" class="input-field">
-          </div>
-          <p class="mt-2" style="font-size:0.72rem;color:var(--muted)">* Incluye a tu campeón y subcampeón entre los cuatro.</p>
-        </div>
-
-        <button type="submit" id="submit-btn" class="btn-primary">
-          <i class="fa-solid fa-paper-plane mr-2"></i>Enviar predicciones
-        </button>
-
-        <div id="status-message" class="hidden"></div>
-      </form>
+      <p class="text-center mt-3" style="font-size:0.7rem;color:var(--muted);">
+        <i class="fa-solid fa-circle-info mr-1"></i>Modelo orientativo · las probabilidades suman 100 %
+      </p>
     </section>
 
     <!-- ═══════════ PESTAÑA CLASIFICACIÓN ═══════════ -->
@@ -349,68 +307,6 @@
       EpixMundial 2026 · <span style="color:var(--cyan);">Epixlife</span> · Datos en Google Sheets
     </footer>
   </div>
-
-  <!-- Lista de equipos -->
-  <datalist id="team-list">
-    <option value="Alemania"></option>
-    <option value="Arabia Saudí"></option>
-    <option value="Argelia"></option>
-    <option value="Argentina"></option>
-    <option value="Australia"></option>
-    <option value="Austria"></option>
-    <option value="Bélgica"></option>
-    <option value="Bolivia"></option>
-    <option value="Bosnia y Herzegovina"></option>
-    <option value="Brasil"></option>
-    <option value="Cabo Verde"></option>
-    <option value="Canadá"></option>
-    <option value="Catar"></option>
-    <option value="Chequia"></option>
-    <option value="Colombia"></option>
-    <option value="Corea del Sur"></option>
-    <option value="Costa de Marfil"></option>
-    <option value="Croacia"></option>
-    <option value="Curazao"></option>
-    <option value="Dinamarca"></option>
-    <option value="Ecuador"></option>
-    <option value="Egipto"></option>
-    <option value="Escocia"></option>
-    <option value="Eslovaquia"></option>
-    <option value="España"></option>
-    <option value="Estados Unidos"></option>
-    <option value="Francia"></option>
-    <option value="Gales"></option>
-    <option value="Ghana"></option>
-    <option value="Haití"></option>
-    <option value="Inglaterra"></option>
-    <option value="Irak"></option>
-    <option value="Irán"></option>
-    <option value="Irlanda"></option>
-    <option value="Italia"></option>
-    <option value="Jamaica"></option>
-    <option value="Japón"></option>
-    <option value="Jordania"></option>
-    <option value="Marruecos"></option>
-    <option value="México"></option>
-    <option value="Noruega"></option>
-    <option value="Nueva Zelanda"></option>
-    <option value="Países Bajos"></option>
-    <option value="Panamá"></option>
-    <option value="Paraguay"></option>
-    <option value="Polonia"></option>
-    <option value="Portugal"></option>
-    <option value="RD Congo"></option>
-    <option value="Rumanía"></option>
-    <option value="Senegal"></option>
-    <option value="Sudáfrica"></option>
-    <option value="Suecia"></option>
-    <option value="Suiza"></option>
-    <option value="Túnez"></option>
-    <option value="Turquía"></option>
-    <option value="Ucrania"></option>
-    <option value="Uruguay"></option>
-    <option value="Uzbekistán"></option>
-  </datalist>
 
   <script src="config.js"></script>
   <script src="main.js"></script>
