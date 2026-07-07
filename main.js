@@ -22,25 +22,28 @@
   };
 
   /* ─── Probabilidades de victoria (hardcoded) ───
-     Calculadas a mano el 3 de julio de 2026, con el Mundial en fase
-     eliminatoria (octavos), sobre la tabla de predicciones corregida.
-     Se ignoran las faltas de ortografía en los nombres (p. ej. "Halaand"
-     cuenta como Haaland): cada pick se evalúa por lo que quiso decir.
-     El modelo pondera la solidez de cada boleto: probabilidad del
-     campeón/subcampeón, del goleador, del MVP, de que la "revelación"
-     siga viva y de cuántos semifinalistas alcanzan la ronda.
-     Nota: Bosnia, Senegal y Ecuador (revelaciones) ya están eliminadas.
+     Recalculadas el 7 de julio de 2026, ya en CUARTOS de final y con
+     datos reales del torneo. Se ignoran las faltas de ortografía.
+
+     Resultado ya CONFIRMADO en la hoja: revelación = Noruega
+       → solo Daini lo acertó: +20 pts asegurados (única con puntos).
+     Goleadores (Bota de Oro): Mbappé 7g+2a (líder), Messi 7g,
+       Haaland 7g, Harry Kane 6g. Lamine Yamal fuera del top.
+     Clasificados a cuartos: España, Francia, Inglaterra, Bélgica,
+       Marruecos, Noruega (+ Argentina/Egipto y Suiza/Colombia).
+     ELIMINADOS (tumban muchos picks): Brasil, Portugal, Alemania,
+       EE. UU., Holanda.
      Las probabilidades suman 100 %. Clave por nombre normalizado. */
   const PROBABILITIES = {
-    'carlos':             { prob: 16.1, note: 'Boleto más completo: Francia campeón, Marruecos (revelación) vivo en octavos, Mbappé goleador, Lamine Yamal MVP y 4 semifinalistas fuertes.' },
-    'nacho':              { prob: 14.3, note: 'España (gran favorita) + Mbappé y 4 buenas semis; le pesa que Bosnia (revelación) ya esté eliminada.' },
-    'ben':                { prob: 13.4, note: 'España campeona y una doble apuesta a Lamine Yamal (goleador y MVP) que puntúa dos veces si estalla; solo pierde Senegal (revelación), ya fuera.' },
-    'bogdan starchenko':  { prob: 11.9, note: 'Semifinalistas muy sólidos (España, Brasil, Argentina, Francia) y Lamine Yamal MVP; Brasil campeón es menos probable y Turquía (revelación) casi descartada.' },
-    'daini carolina':     { prob: 11.7, note: 'España campeona y Lamine Yamal MVP; Haaland (goleador) y Noruega (revelación) dependen de que Noruega siga con vida.' },
-    'orazio':             { prob: 11.6, note: 'Francia + semis fuertes (Francia, Inglaterra, España) y Lamine Yamal MVP; Japón como revelación es una apuesta arriesgada.' },
-    'lucas':              { prob:  9.5, note: 'EE. UU. (revelación) sigue vivo como anfitrión en octavos, pero Alemania campeón y Míchel Olise MVP son poco probables.' },
-    'victor':             { prob:  8.3, note: 'Sus semifinalistas son sólidos, pero Portugal campeón y Bélgica como "revelación" son apuestas arriesgadas.' },
-    'juan manuel cr7':    { prob:  3.2, note: 'Muy dependiente de sus semifinalistas: Ecuador (revelación) ya está eliminado y Portugal campeón + Cristiano Ronaldo MVP son poco probables.' },
+    'daini carolina':     { prob: 23.0, note: 'Líder: única con puntos asegurados — Noruega es la revelación oficial (+20). Además España campeona, Haaland (goleador, empatado 1.º con 7 goles) y Lamine Yamal MVP siguen vivos.' },
+    'nacho':              { prob: 16.0, note: 'España (favorita) + Mbappé (líder de goleadores) y 3 semifinalistas en pie (España, Francia, Argentina); pierde la revelación (Bosnia) y Alemania (semi) está fuera.' },
+    'carlos':             { prob: 15.7, note: 'Francia + Mbappé (líder de goleadores), Lamine Yamal MVP y 3 semis vivas (Francia, España, Inglaterra); Brasil (semi) y Marruecos (revelación) ya no suman.' },
+    'ben':                { prob: 12.0, note: 'España campeona y doble apuesta a Lamine Yamal; buenas semis (España, Francia, Argentina), pero Holanda (semi) y Senegal (revelación) están eliminadas.' },
+    'orazio':             { prob: 11.3, note: 'Francia + Harry Kane (6 goles) y semis fuertes (Francia, Inglaterra, España); Portugal (semi) eliminado y Japón (revelación) descartado.' },
+    'bogdan starchenko':  { prob:  8.9, note: 'Le hunde que Brasil (su campeón y una semi) esté eliminado; sobreviven Mbappé (goleador líder), Yamal MVP y las semis España/Argentina/Francia.' },
+    'victor':             { prob:  7.2, note: 'Portugal (campeón y una semi) eliminado; conserva Mbappé (goleador) y las semis España/Francia, pero Bélgica lo tiene difícil.' },
+    'lucas':              { prob:  5.1, note: 'Doble golpe: Alemania (campeón y semi) y EE. UU. (revelación) fuera; solo le quedan Mbappé (goleador) y las semis España/Argentina.' },
+    'juan manuel cr7':    { prob:  0.8, note: 'Casi sin opciones: Portugal (campeón), Holanda (subcampeón) y Ecuador (revelación) eliminados; solo le queda Haaland (goleador) y una semi (Argentina).' },
   };
 
   /* ─── helpers ─── */
