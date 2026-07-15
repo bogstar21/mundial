@@ -21,26 +21,35 @@
     loading: false,
   };
 
-    /* ─── Probabilidades de victoria (hardcoded) ───
-     Recalculadas el 12 de julio de 2026, tras concluir los CUARTOS de final.
-     Semifinalistas confirmados: Francia, España, Inglaterra y Argentina.
-     
-     Puntos Clave:
-       · Revelación: Noruega confirmada (+20 para Daini).
-       · Goleadores: Mbappé lidera con 8g+3a, seguido de Messi (7g) y Haaland (7g, fuera).
-     Las probabilidades se han reajustado y suman exactamente 100 %. */
-  const PROBABILITIES = {
-    'carlos':             { prob: 25.2, note: 'Consolida el liderato absoluto. Con España, Inglaterra y Francia en semis (3/4), mantiene a su campeón (Francia) y subcampeón vivos, con Mbappé como líder de goleo.' },
-    'nacho':              { prob: 22.4, note: 'Sube al segundo puesto acechando al líder. Gran acierto con España, Francia y Argentina en semis (3/4). Su campeón (España) y Mbappé lo respaldan con fuerza.' },
-    'daini carolina':     { prob: 12.8, note: 'Cae posiciones. Aunque la revelación de Noruega le otorgó +20, la eliminación de su goleador Haaland y no tener a Francia en semifinales le resta empuje frente al resto.' },
-    'ben':                { prob: 12.2, note: 'Sube con fuerza al meter 3/4 semifinalistas (España, Francia, Argentina). Mantiene intactas sus opciones de finalistas exactos con España y Francia.' },
-    'orazio':             { prob: 11.6, note: 'Se mantiene competitivo al clasificar 3/4 semifinalistas (Francia, Inglaterra, España). Su campeón Francia sigue firme y Harry Kane acecha en la tabla.' },
-    'bogdan starchenko':  { prob:  7.8, note: 'Baja considerablemente. Aunque acertó 3/4 semifinalistas (España, Argentina, Francia), su gran apuesta por Brasil como campeón ya está eliminada.' },
-    'victor':             { prob:  4.4, note: 'Se queda rezagado al tener solo 2/4 semifinalistas (España, Francia). Con Portugal fuera, sus opciones principales de título se esfumaron.' },
-    'lucas':              { prob:  3.1, note: 'Opciones mínimas. Su campeón Alemania está eliminado; solo se sostiene matemáticamente por la supervivencia de España y Argentina.' },
-    'juan manuel cr7':    { prob:  0.5, note: 'Matemáticamente al borde de la eliminación. Solo le queda Argentina viva en semifinales; el resto de sus fichas clave de campeonato ya cayeron.' },
-  };
+  /* ─── Probabilidades de victoria (hardcoded) ───
+     Recalculadas el 15 de julio de 2026, en SEMIFINALES, con datos reales.
+     Se ignoran las faltas de ortografía en los nombres.
 
+     Ya RESUELTO (puntos fijos):
+       · Revelación = Noruega → Daini +20.
+       · Los 4 semifinalistas: España, Francia, Inglaterra, Argentina.
+         Aciertos (10 c/u): Bogdan 3, Daini 2, Nacho 3, Lucas 2, Víctor 2,
+         orazio 3, Carlos 3, Ben 3, Juan Manuel 1.
+       · Puntos garantizados: Daini 40 · Bogdan/Nacho/orazio/Carlos/Ben 30 ·
+         Lucas/Víctor 20 · Juan Manuel 10.
+     Semifinal de ayer: ESPAÑA 2-0 FRANCIA → España a la FINAL; Francia
+       eliminada (tumba el campeón de orazio y Carlos y el subcampeón de
+       Bogdan, Nacho y Víctor). La otra semi (Inglaterra-Argentina) es hoy.
+     Bota de Oro: Mbappé 8 (congelado, Francia fuera), Messi 8 (vivo),
+       Haaland 7 (fuera, ya no puede ganar), Harry Kane 6 (vivo).
+     En juego: campeón (España favorita), subcampeón, goleador y MVP.
+     Las probabilidades suman 100 %. Clave por nombre normalizado. */
+  const PROBABILITIES = {
+    'daini carolina':     { prob: 25.2, note: 'Líder clara: España en la FINAL (su campeón, favorito al título) + revelación Noruega ya sumada (+20) + 2 semifinalistas y Lamine Yamal MVP vivo. Ya va 1.ª en puntos reales (40).' },
+    'nacho':              { prob: 18.2, note: 'España finalista (su campeón) + Mbappé goleador y 3 semifinalistas acertados (30 fijos); no acertó la revelación.' },
+    'ben':                { prob: 15.6, note: 'España finalista (su campeón) + 3 semifinalistas (30 fijos) + Lamine Yamal MVP; su goleador (Yamal) va muy lejos de la Bota de Oro.' },
+    'carlos':             { prob: 13.2, note: 'Le duele que Francia (su campeón) haya caído; conserva 3 semifinalistas (30 fijos), España como subcampeón posible, Mbappé goleador y Yamal MVP.' },
+    'orazio':             { prob:  8.7, note: 'Francia (su campeón) eliminada le quita su mayor apuesta; le quedan 3 semifinalistas (30 fijos), Inglaterra subcampeón y Harry Kane goleador.' },
+    'bogdan starchenko':  { prob:  7.8, note: '3 semifinalistas (30 fijos) + Mbappé goleador y Yamal MVP, pero Brasil (campeón) y Francia (subcampeón) están fuera.' },
+    'lucas':              { prob:  7.0, note: '2 semifinalistas (20 fijos) + España subcampeón posible y Mbappé goleador, pero Alemania (campeón) y su MVP (Olise, de Francia) están eliminados.' },
+    'victor':             { prob:  3.9, note: 'Solo 2 semifinalistas (20 fijos) y Mbappé goleador; Portugal (campeón), Francia (subcampeón) y su revelación ya cayeron.' },
+    'juan manuel cr7':    { prob:  0.4, note: 'Prácticamente eliminado: solo 1 semifinalista (10 fijos) y el resto de su boleto está fuera (Haaland ya no puede ganar la Bota).' },
+  };
 
   /* ─── helpers ─── */
 
