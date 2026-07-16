@@ -21,35 +21,71 @@
     loading: false,
   };
 
-  /* ─── Probabilidades de victoria (hardcoded) ───
-     Recalculadas el 15 de julio de 2026, en SEMIFINALES, con datos reales.
-     Se ignoran las faltas de ortografía en los nombres.
+  /* ─── ESCENARIOS DE LA FINAL (hardcoded) ───
+     Calculado el 16 de julio de 2026. Solo queda la FINAL: España vs
+     Argentina (19 jul). Se ignoran las faltas de ortografía.
 
-     Ya RESUELTO (puntos fijos):
+     Ya RESUELTO (puntos fijos, iguales en los dos escenarios):
        · Revelación = Noruega → Daini +20.
-       · Los 4 semifinalistas: España, Francia, Inglaterra, Argentina.
-         Aciertos (10 c/u): Bogdan 3, Daini 2, Nacho 3, Lucas 2, Víctor 2,
-         orazio 3, Carlos 3, Ben 3, Juan Manuel 1.
-       · Puntos garantizados: Daini 40 · Bogdan/Nacho/orazio/Carlos/Ben 30 ·
-         Lucas/Víctor 20 · Juan Manuel 10.
-     Semifinal de ayer: ESPAÑA 2-0 FRANCIA → España a la FINAL; Francia
-       eliminada (tumba el campeón de orazio y Carlos y el subcampeón de
-       Bogdan, Nacho y Víctor). La otra semi (Inglaterra-Argentina) es hoy.
-     Bota de Oro: Mbappé 8 (congelado, Francia fuera), Messi 8 (vivo),
-       Haaland 7 (fuera, ya no puede ganar), Harry Kane 6 (vivo).
-     En juego: campeón (España favorita), subcampeón, goleador y MVP.
-     Las probabilidades suman 100 %. Clave por nombre normalizado. */
-  const PROBABILITIES = {
-    'daini carolina':     { prob: 25.2, note: 'Líder clara: España en la FINAL (su campeón, favorito al título) + revelación Noruega ya sumada (+20) + 2 semifinalistas y Lamine Yamal MVP vivo. Ya va 1.ª en puntos reales (40).' },
-    'nacho':              { prob: 18.2, note: 'España finalista (su campeón) + Mbappé goleador y 3 semifinalistas acertados (30 fijos); no acertó la revelación.' },
-    'ben':                { prob: 15.6, note: 'España finalista (su campeón) + 3 semifinalistas (30 fijos) + Lamine Yamal MVP; su goleador (Yamal) va muy lejos de la Bota de Oro.' },
-    'carlos':             { prob: 13.2, note: 'Le duele que Francia (su campeón) haya caído; conserva 3 semifinalistas (30 fijos), España como subcampeón posible, Mbappé goleador y Yamal MVP.' },
-    'orazio':             { prob:  8.7, note: 'Francia (su campeón) eliminada le quita su mayor apuesta; le quedan 3 semifinalistas (30 fijos), Inglaterra subcampeón y Harry Kane goleador.' },
-    'bogdan starchenko':  { prob:  7.8, note: '3 semifinalistas (30 fijos) + Mbappé goleador y Yamal MVP, pero Brasil (campeón) y Francia (subcampeón) están fuera.' },
-    'lucas':              { prob:  7.0, note: '2 semifinalistas (20 fijos) + España subcampeón posible y Mbappé goleador, pero Alemania (campeón) y su MVP (Olise, de Francia) están eliminados.' },
-    'victor':             { prob:  3.9, note: 'Solo 2 semifinalistas (20 fijos) y Mbappé goleador; Portugal (campeón), Francia (subcampeón) y su revelación ya cayeron.' },
-    'juan manuel cr7':    { prob:  0.4, note: 'Prácticamente eliminado: solo 1 semifinalista (10 fijos) y el resto de su boleto está fuera (Haaland ya no puede ganar la Bota).' },
+       · Semifinalistas (España, Francia, Inglaterra, Argentina), 10 c/u:
+         Bogdan 3(30), Daini 2(20), Nacho 3(30), Lucas 2(20), Víctor 2(20),
+         orazio 3(30), Carlos 3(30), Ben 3(30), Juan Manuel 1(10).
+       · Bota de Oro → Messi (8g/4a, imbatible; Mbappé congelado en 8g/3a).
+         Nadie eligió a Messi ⇒ el goleador (25) no lo puntúa nadie.
+     Lo ÚNICO que decide la final:
+       · Campeón (50): solo lo tienen los de España (Daini, Nacho, Ben).
+       · Subcampeón (30): solo los de España (Lucas, Carlos) — cobran si
+         gana Argentina.
+       · MVP (20): si gana España, probable Lamine Yamal (Bogdan, Daini,
+         orazio, Carlos, Ben); si gana Argentina, probable Messi (nadie). */
+
+  const FINAL = {
+    when: 'domingo 19 jul 2026 · 21:00 h (España) · MetLife Stadium',
+    kickoff: '2026-07-19T19:00:00Z', // 15:00 ET / 21:00 CEST
+    a: { name: 'España',    flag: '🇪🇸', win: 55 },
+    b: { name: 'Argentina', flag: '🇦🇷', win: 45 },
   };
+
+  // Probabilidad global de GANAR la quiniela (marginando ambos resultados).
+  // Solo Daini, Carlos o Nacho pueden acabar 1.º; el resto no llega.
+  const WIN_PROB = [
+    { name: 'Carlos',         pct: 45, note: 'Gana la quiniela si gana Argentina (España subcampeón, +30).' },
+    { name: 'Daini Carolina', pct: 41, note: 'Gana si gana España y el MVP no es Pedri (lo más probable).' },
+    { name: 'Nacho',          pct: 14, note: 'Gana solo si gana España y además el MVP es Pedri.' },
+  ];
+
+  const SCENARIOS = [
+    {
+      key: 'espana', flag: '🇪🇸', title: 'Si gana ESPAÑA', win: 55,
+      detail: 'España campeón (+50 a Daini, Nacho y Ben) · subcampeón Argentina (nadie) · MVP probable Lamine Yamal (+20). Ojo: si el MVP fuese Pedri, Nacho subiría a 100 y adelantaría a Daini.',
+      table: [
+        { name: 'Daini Carolina',    pts: 110, why: 'Campeón + Revelación + MVP + 2 semis' },
+        { name: 'Ben',               pts: 100, why: 'Campeón + MVP + 3 semis' },
+        { name: 'Nacho',             pts:  80, why: 'Campeón + 3 semis' },
+        { name: 'Bogdan Starchenko', pts:  50, why: 'MVP + 3 semis' },
+        { name: 'orazio',            pts:  50, why: 'MVP + 3 semis' },
+        { name: 'Carlos',            pts:  50, why: 'MVP + 3 semis' },
+        { name: 'Lucas',             pts:  20, why: '2 semis' },
+        { name: 'Víctor',            pts:  20, why: '2 semis' },
+        { name: 'Juan Manuel CR7',   pts:  10, why: '1 semi' },
+      ],
+    },
+    {
+      key: 'argentina', flag: '🇦🇷', title: 'Si gana ARGENTINA', win: 45,
+      detail: 'Argentina campeón (nadie lo eligió) · subcampeón España (+30 a Lucas y Carlos) · MVP y Bota de Oro para Messi (nadie).',
+      table: [
+        { name: 'Carlos',            pts: 60, why: 'Subcampeón + 3 semis' },
+        { name: 'Lucas',             pts: 50, why: 'Subcampeón + 2 semis' },
+        { name: 'Daini Carolina',    pts: 40, why: 'Revelación + 2 semis' },
+        { name: 'Bogdan Starchenko', pts: 30, why: '3 semis' },
+        { name: 'Nacho',             pts: 30, why: '3 semis' },
+        { name: 'orazio',            pts: 30, why: '3 semis' },
+        { name: 'Ben',               pts: 30, why: '3 semis' },
+        { name: 'Víctor',            pts: 20, why: '2 semis' },
+        { name: 'Juan Manuel CR7',   pts: 10, why: '1 semi' },
+      ],
+    },
+  ];
 
   /* ─── helpers ─── */
 
@@ -79,9 +115,6 @@
     h === false ? '<i class="fa-solid fa-xmark c-red"   style="font-size:0.8rem;"></i>' :
                   '<i class="fa-regular fa-clock c-muted" style="font-size:0.8rem;"></i>';
 
-  // ¿es un semifinalista escrito con nombre de equipo (y no de jugador)? — heurístico laxo
-  const probFor = player => PROBABILITIES[norm(player)] || null;
-
   /* ─── tabs ─── */
 
   function switchTab(tab, { refresh = false } = {}) {
@@ -93,8 +126,9 @@
     });
     $('#panel-probs').classList.toggle('hidden', tab !== 'probs');
     $('#panel-board').classList.toggle('hidden', tab !== 'board');
-    if (refresh || !state.players.length) loadBoard({ silent: tab !== 'board' && tab !== 'probs' });
-    history.replaceState(null, '', tab === 'board' ? '#clasificacion' : '#probabilidades');
+    // La clasificación necesita datos del backend; los escenarios son fijos.
+    if (tab === 'board' && (refresh || !state.players.length)) loadBoard();
+    history.replaceState(null, '', tab === 'board' ? '#clasificacion' : '#escenarios');
   }
 
   /* ─── datos ─── */
@@ -105,7 +139,7 @@
     state.loading = true;
     const icon = $('#refresh-btn i');
     if (icon) icon.classList.add('fa-spin');
-    if (!silent && !state.players.length) { renderSkeleton(); renderProbsSkeleton(); }
+    if (!silent && !state.players.length) renderSkeleton();
 
     try {
       const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=leaderboard&cb=${Date.now()}`);
@@ -117,75 +151,147 @@
       state.locked = !!data.locked;
       if (data.scoring) state.scoring = data.scoring;
       renderBoard(data);
-      renderProbs();
       $('#last-updated').textContent = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
     } catch (err) {
-      if (!silent) { renderBoardError(err); renderProbsError(err); }
+      if (!silent) renderBoardError(err);
     } finally {
       state.loading = false;
       if (icon) icon.classList.remove('fa-spin');
     }
   }
 
-  /* ─── probabilidades ─── */
+  /* ─── escenarios de la final ─── */
 
-  function renderProbsSkeleton() {
-    $('#probs-rows').innerHTML = Array.from({ length: 5 }, () => '<div class="skeleton"></div>').join('');
+  // Los escenarios son fijos (no dependen del backend); se pintan una vez.
+  function renderScenarios() {
+    renderFinalHeader();
+    startCountdown();
+    renderWinProb();
+    renderScenarioCards();
   }
 
-  function renderProbsError(err) {
-    $('#probs-rows').innerHTML = `
-      <div class="fade-in" style="text-align:center;padding:2rem 0;">
-        <div style="font-size:2rem;margin-bottom:0.5rem;">📡</div>
-        <p style="color:#f06070;font-weight:700;margin-bottom:0.4rem;">No se pudieron cargar los jugadores</p>
-        <p style="color:var(--muted);font-size:0.78rem;">${esc(err.message || err)}</p>
+  function renderFinalHeader() {
+    const box = $('#final-header');
+    if (!box) return;
+    const team = t => `
+      <div class="final-team">
+        <span class="final-flag">${t.flag}</span>
+        <span class="final-name">${esc(t.name)}</span>
+        <span class="final-pct c-cyan">${t.win}%</span>
+      </div>`;
+    const cd = (id, lbl) => `
+      <div class="cd-box"><div class="cd-num" id="${id}">–</div><div class="cd-lbl">${lbl}</div></div>`;
+    box.innerHTML = `
+      <div class="final-hero">
+        <div class="final-label"><i class="fa-solid fa-star"></i> La Gran Final <i class="fa-solid fa-star"></i></div>
+        <div class="final-vs">
+          ${team(FINAL.a)}
+          <div class="vs-badge">VS</div>
+          ${team(FINAL.b)}
+        </div>
+        <div id="cd-wrap" class="cd-row">
+          ${cd('cd-d', 'días')}${cd('cd-h', 'horas')}${cd('cd-m', 'min')}${cd('cd-s', 'seg')}
+        </div>
+        <div class="cd-venue"><i class="fa-solid fa-location-dot mr-1"></i>${esc(FINAL.when)}</div>
       </div>`;
   }
 
-  function renderProbs() {
-    const box = $('#probs-rows');
-    if (!box) return;
+  /* ─── cuenta atrás en vivo ─── */
 
-    // Empareja cada jugador con su probabilidad hardcodeada y ordena de mayor a menor
-    const rows = state.players
-      .map(p => ({ p, meta: probFor(p.player) }))
-      .filter(r => r.meta)
-      .sort((a, b) => b.meta.prob - a.meta.prob);
-
-    if (!rows.length) {
-      box.innerHTML = `
-        <div class="fade-in" style="text-align:center;padding:2.5rem 0;">
-          <div style="font-size:2.5rem;margin-bottom:0.75rem;">🎯</div>
-          <p style="font-weight:800;font-size:1rem;">Todavía no hay jugadores</p>
-        </div>`;
-      return;
-    }
-
-    const max = rows[0].meta.prob;
-    box.innerHTML = rows.map((r, i) => probRowHtml(r.p, r.meta, i + 1, max)).join('');
+  let cdTimer = null;
+  function startCountdown() {
+    const target = new Date(FINAL.kickoff).getTime();
+    if (cdTimer) clearInterval(cdTimer);
+    const tick = () => {
+      const diff = target - Date.now();
+      if (diff <= 0) return showFinalLive();
+      setCd('cd-d', Math.floor(diff / 86400000));
+      setCd('cd-h', Math.floor(diff % 86400000 / 3600000), 2);
+      setCd('cd-m', Math.floor(diff % 3600000 / 60000), 2);
+      setCd('cd-s', Math.floor(diff % 60000 / 1000), 2);
+    };
+    tick();
+    cdTimer = setInterval(tick, 1000);
   }
 
-  function probRowHtml(p, meta, rank, max) {
-    const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
-    const width = Math.max(4, Math.round((meta.prob / max) * 100));
-    const champion = (p.picks && p.picks.champion) || '—';
-    return `
-      <div class="lb-row fade-in" style="padding:0.85rem 1rem;">
-        <div style="display:flex;align-items:center;gap:0.75rem;">
-          <div class="rank-badge ${rankClass}">${rank}</div>
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:0.5rem;">
-              <span style="font-weight:800;font-size:0.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(p.player)}</span>
-              <span class="c-cyan" style="font-weight:900;font-size:1.15rem;">${meta.prob.toFixed(1)}<span style="font-size:0.62rem;color:var(--muted);margin-left:2px;">%</span></span>
-            </div>
-            <div style="height:7px;background:var(--navy);border:1px solid var(--border);border-radius:20px;overflow:hidden;margin-top:0.4rem;">
-              <div style="height:100%;width:${width}%;background:linear-gradient(90deg,var(--cyan),#0090a8);border-radius:20px;"></div>
-            </div>
-            <div class="c-muted" style="font-size:0.72rem;margin-top:0.45rem;">
-              <span style="font-weight:700;color:#f5c518;">🏆 ${esc(champion)}</span> · ${esc(meta.note)}
+  function setCd(id, val, pad) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const str = pad ? String(val).padStart(pad, '0') : String(val);
+    if (el.textContent === str) return;
+    el.textContent = str;
+    el.classList.remove('cd-flash');
+    void el.offsetWidth;        // reinicia la animación
+    el.classList.add('cd-flash');
+  }
+
+  function showFinalLive() {
+    if (cdTimer) { clearInterval(cdTimer); cdTimer = null; }
+    const wrap = $('#cd-wrap');
+    if (wrap) wrap.innerHTML = '<span class="cd-live"><span class="dot"></span>¡La final ya está en juego!</span>';
+  }
+
+  function renderWinProb() {
+    const box = $('#win-prob');
+    if (!box) return;
+    const max = Math.max(...WIN_PROB.map(w => w.pct));
+    const row = (w, i) => {
+      const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+      const width = Math.max(6, Math.round((w.pct / max) * 100));
+      return `
+        <div class="lb-row rise" style="padding:0.7rem 0.9rem;animation-delay:${i * 0.08}s;">
+          <div style="display:flex;align-items:center;gap:0.7rem;">
+            <div class="rank-badge ${rankClass}">${i + 1}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:0.5rem;">
+                <span style="font-weight:800;font-size:0.9rem;">${esc(w.name)}</span>
+                <span class="c-cyan" style="font-weight:900;font-size:1.1rem;">${w.pct}<span style="font-size:0.6rem;color:var(--muted);margin-left:2px;">%</span></span>
+              </div>
+              <div style="height:6px;background:var(--navy);border:1px solid var(--border);border-radius:20px;overflow:hidden;margin-top:0.35rem;">
+                <div class="wp-fill" style="height:100%;width:${width}%;background:linear-gradient(90deg,var(--cyan),#0090a8);border-radius:20px;"></div>
+              </div>
+              <div class="c-muted" style="font-size:0.7rem;margin-top:0.35rem;">${esc(w.note)}</div>
             </div>
           </div>
+        </div>`;
+    };
+    box.innerHTML = `
+      <div style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin:0.25rem 0 0.6rem;">
+        <i class="fa-solid fa-trophy mr-1"></i>Prob. de ganar la quiniela
+      </div>
+      ${WIN_PROB.map(row).join('')}
+      <p class="c-muted" style="font-size:0.68rem;margin-top:0.35rem;">Solo estos tres pueden acabar 1.º; el resto ya no llega matemáticamente.</p>`;
+  }
+
+  function renderScenarioCards() {
+    const box = $('#scenarios');
+    if (!box) return;
+    box.innerHTML = SCENARIOS.map(scenarioHtml).join('');
+  }
+
+  function scenarioHtml(sc, sci) {
+    const rowHtmlS = (r, i) => {
+      const rank = i + 1;
+      const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
+      const winner = rank === 1;
+      return `
+        <div class="scn-row ${winner ? 'scn-winner' : ''}" style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.65rem;${winner ? 'background:#1a1500;border:1px solid #b8860b;' : ''}">
+          <div class="rank-badge ${rankClass}" style="width:28px;height:28px;font-size:0.75rem;">${rank}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:${winner ? 800 : 700};font-size:0.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${winner ? '👑 ' : ''}${esc(r.name)}</div>
+            <div class="c-muted" style="font-size:0.66rem;">${esc(r.why)}</div>
+          </div>
+          <div class="c-cyan" style="font-weight:900;font-size:1rem;min-width:42px;text-align:right;">${r.pts}<span style="font-size:0.58rem;color:var(--muted);margin-left:2px;">pts</span></div>
+        </div>`;
+    };
+    return `
+      <div class="card-inner scn-card rise p-4" style="margin-bottom:1rem;animation-delay:${0.15 + sci * 0.1}s;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:0.6rem;">
+          <h3 style="font-weight:800;font-size:0.95rem;">${sc.flag} ${esc(sc.title)}</h3>
+          <span class="result-chip" style="font-size:0.7rem;"><span class="c-cyan" style="font-weight:800;">${sc.win}%</span></span>
         </div>
+        <p class="c-muted" style="font-size:0.72rem;line-height:1.5;margin-bottom:0.75rem;">${esc(sc.detail)}</p>
+        <div style="display:flex;flex-direction:column;gap:0.15rem;">${sc.table.map(rowHtmlS).join('')}</div>
       </div>`;
   }
 
@@ -210,7 +316,6 @@
       </div>`;
     $('#podium').innerHTML = '';
     $('#board-rows').innerHTML = '';
-    $('#probs-rows').innerHTML = '';
   }
 
   function renderBoardError(err) {
@@ -378,10 +483,11 @@
     $$('.tab-btn').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
     $('#refresh-btn').addEventListener('click', () => loadBoard());
     bindRows();
+    renderScenarios();               // escenarios fijos: se pintan una vez
     if (location.hash === '#clasificacion') switchTab('board');
-    loadBoard({ silent: false });
+    else loadBoard({ silent: true }); // precarga la clasificación en segundo plano
     setInterval(() => {
-      if (document.visibilityState === 'visible' && (state.tab === 'board' || state.tab === 'probs')) {
+      if (document.visibilityState === 'visible' && state.tab === 'board') {
         loadBoard({ silent: true });
       }
     }, REFRESH_MS);

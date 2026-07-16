@@ -213,6 +213,114 @@
     }
     .semi-chip.hit  { border-color: #1a8a3a; color: #5ddc80; background: #0d1f12; }
     .semi-chip.miss { border-color: #6b1520; color: #f06070; background: #1a0b0d; text-decoration: line-through; }
+
+    /* ══════════ FINAL HERO + COUNTDOWN ══════════ */
+    .final-hero {
+      position: relative;
+      border-radius: 16px;
+      padding: 1.6rem 1rem 1.4rem;
+      text-align: center;
+      overflow: hidden;
+      margin-bottom: 1.25rem;
+      background:
+        radial-gradient(120% 140% at 12% 0%, rgba(0,194,212,0.20), transparent 55%),
+        radial-gradient(120% 140% at 88% 100%, rgba(232,33,90,0.20), transparent 55%),
+        var(--navy2);
+      border: 1px solid var(--border);
+    }
+    .final-hero::before {
+      content: "";
+      position: absolute; inset: -2px;
+      background: linear-gradient(120deg, var(--cyan), transparent 45%, var(--pink));
+      filter: blur(16px); opacity: 0.25; z-index: 0;
+      animation: heroGlow 6s ease-in-out infinite alternate;
+    }
+    @keyframes heroGlow { from { opacity: 0.14; } to { opacity: 0.42; } }
+    .final-hero > * { position: relative; z-index: 1; }
+
+    .final-label {
+      font-size: 0.68rem; font-weight: 800; letter-spacing: 0.28em;
+      text-transform: uppercase; color: var(--cyan);
+    }
+    .final-label i { animation: twinkle 2.5s ease-in-out infinite; }
+    @keyframes twinkle { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+    .final-vs {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.9rem; margin: 0.9rem 0 1.1rem;
+    }
+    .final-team {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 0.2rem; min-width: 96px;
+    }
+    .final-flag { font-size: 2.6rem; line-height: 1; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); animation: floaty 3.6s ease-in-out infinite; }
+    .final-team:last-child .final-flag { animation-delay: 1.3s; }
+    @keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+    .final-name { font-weight: 800; font-size: 0.98rem; }
+    .final-pct  { font-weight: 900; font-size: 1.15rem; }
+
+    .vs-badge {
+      font-weight: 900; font-size: 0.82rem; color: var(--navy);
+      background: var(--cyan); border-radius: 50%;
+      width: 40px; height: 40px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      animation: vspulse 2s infinite;
+    }
+    @keyframes vspulse {
+      0%   { box-shadow: 0 0 0 0 rgba(0,194,212,0.55); }
+      70%  { box-shadow: 0 0 0 14px rgba(0,194,212,0); }
+      100% { box-shadow: 0 0 0 0 rgba(0,194,212,0); }
+    }
+
+    .cd-row { display: flex; justify-content: center; gap: 0.5rem; }
+    .cd-box {
+      background: rgba(10,18,28,0.7); border: 1px solid var(--border);
+      border-radius: 12px; padding: 0.55rem 0.4rem; min-width: 62px;
+      backdrop-filter: blur(2px);
+    }
+    .cd-num {
+      font-size: 1.7rem; font-weight: 900; line-height: 1;
+      font-variant-numeric: tabular-nums; color: var(--text);
+    }
+    .cd-lbl {
+      font-size: 0.56rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--muted); margin-top: 0.25rem;
+    }
+    .cd-flash { animation: cdflash 0.6s ease; }
+    @keyframes cdflash { 0% { color: var(--cyan); transform: scale(1.14); } 100% { color: var(--text); transform: scale(1); } }
+    .cd-venue { font-size: 0.72rem; color: var(--muted); margin-top: 0.9rem; }
+    .cd-live {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-weight: 800; color: var(--pink); font-size: 1rem;
+    }
+    .cd-live .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--pink); animation: blink 1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0.25; } }
+
+    /* animated win% bars — crecen solas desde 0 hasta su ancho inline */
+    .wp-fill { animation: wpGrow 1s cubic-bezier(.2,.8,.2,1) both; }
+    @keyframes wpGrow { from { width: 0; } }
+
+    /* scenario cards + winner sheen + hover */
+    .scn-card { transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s; }
+    .scn-card:hover { transform: translateY(-2px); border-color: #3a5068; box-shadow: 0 10px 26px rgba(0,0,0,0.4); }
+    .scn-row { transition: background 0.12s; border-radius: 6px; }
+    .scn-row:hover { background: rgba(255,255,255,0.04); }
+    .scn-winner { position: relative; overflow: hidden; }
+    .scn-winner::after {
+      content: ""; position: absolute; top: 0; left: -60%; width: 55%; height: 100%;
+      background: linear-gradient(120deg, transparent, rgba(245,197,24,0.20), transparent);
+      animation: sheen 3.4s ease-in-out infinite; pointer-events: none;
+    }
+    @keyframes sheen { 0% { left: -60%; } 55%,100% { left: 130%; } }
+
+    /* staggered rise-in */
+    .rise { animation: rise 0.45s ease both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .final-hero::before, .final-flag, .vs-badge, .final-label i,
+      .cd-flash, .scn-winner::after, .rise, .cd-live .dot, .wp-fill { animation: none !important; }
+    }
   </style>
 </head>
 <body class="min-h-screen py-8 px-4 sm:px-6">
@@ -244,38 +352,42 @@
           <div class="text-[10px] font-bold uppercase tracking-widest" style="color:var(--muted)">World Cup 2026</div>
         </div>
       </div>
-      <p style="color:var(--muted); font-size:0.85rem;">Predicciones cerradas — sigue las probabilidades de victoria y la clasificación en directo.</p>
+      <p style="color:var(--muted); font-size:0.85rem;">Predicciones cerradas — mira los escenarios de la final y la clasificación en directo.</p>
     </header>
 
     <!-- TABS -->
     <nav class="grid grid-cols-2 gap-2 mb-6" role="tablist">
       <button class="tab-btn tab-active" data-tab="probs" role="tab" aria-selected="true">
-        <i class="fa-solid fa-percent mr-1.5"></i>Probabilidades
+        <i class="fa-solid fa-code-fork mr-1.5"></i>Escenarios
       </button>
       <button class="tab-btn" data-tab="board" role="tab" aria-selected="false">
         <i class="fa-solid fa-ranking-star mr-1.5"></i>Clasificación
       </button>
     </nav>
 
-    <!-- ═══════════ PESTAÑA PROBABILIDADES ═══════════ -->
+    <!-- ═══════════ PESTAÑA ESCENARIOS ═══════════ -->
     <section id="panel-probs" role="tabpanel">
       <div class="card p-5 sm:p-6">
         <div class="flex items-center justify-between gap-3 mb-4">
           <h2 style="font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;">
-            <i class="fa-solid fa-percent mr-1.5 c-cyan"></i>Probabilidad de victoria
+            <i class="fa-solid fa-code-fork mr-1.5 c-cyan"></i>Escenarios de la final
           </h2>
-          <span class="result-chip" style="font-size:0.7rem;"><i class="fa-solid fa-lock c-muted"></i> Predicciones cerradas</span>
+          <span class="result-chip" style="font-size:0.7rem;"><i class="fa-solid fa-futbol c-muted"></i> Solo queda la final</span>
         </div>
         <p class="c-muted" style="font-size:0.78rem;line-height:1.6;margin-bottom:1.25rem;">
-          Probabilidad de que cada jugador gane la quiniela <b>ahora mismo</b> (15 jul 2026, semifinales),
-          estimada con los resultados reales: <b>España a la final</b> (2-0 a Francia), semifinalistas ya
-          decididos (España, Francia, Inglaterra, Argentina), revelación confirmada <b>Noruega</b> y goleadores
-          Mbappé/Messi con 8. No sustituye a la <span class="c-cyan">Clasificación</span>, que se activará con todos los resultados oficiales.
+          Todo está decidido salvo la <b>final España vs Argentina</b> (19 jul). Los semifinalistas, la revelación
+          (Noruega) y la Bota de Oro (Messi) ya están cerrados. Según quién gane la final, así queda la quiniela.
+          La <span class="c-cyan">Clasificación</span> se activará con el resultado oficial.
         </p>
-        <div id="probs-rows"></div>
+        <div id="final-header"></div>
+        <div id="win-prob" class="mb-5"></div>
+        <div style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:0.6rem;">
+          <i class="fa-solid fa-list-ol mr-1"></i>Clasificación final según el resultado
+        </div>
+        <div id="scenarios"></div>
       </div>
       <p class="text-center mt-3" style="font-size:0.7rem;color:var(--muted);">
-        <i class="fa-solid fa-circle-info mr-1"></i>Modelo orientativo · actualizado a semifinales (15 jul 2026) · las probabilidades suman 100 %
+        <i class="fa-solid fa-circle-info mr-1"></i>Modelo orientativo · final del 19 jul 2026 · 👑 = ganador de la quiniela en ese escenario
       </p>
     </section>
 
